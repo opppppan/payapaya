@@ -15,8 +15,8 @@ let effects = [];
 let score = 0;
 let miss = 0;
 let gameRunning = false;
-let isGameOver = false; // ゲームオーバー状態フラグ
-let scoreSent = false;  // ★ 重複送信防止フラグ
+let isGameOver = false;
+let scoreSent = false;
 
 let movingLeft = false;
 let movingRight = false;
@@ -141,7 +141,6 @@ function gameLoop() {
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
 
-    // ゲームオーバー時は半透明
     if (isGameOver) {
       ctx.globalAlpha = 0.3;
     }
@@ -200,7 +199,7 @@ function endGame() {
   document.getElementById('finalScore').innerText = `Your Score: ${score}`;
   document.getElementById('gameOver').classList.remove('hidden');
 
-  if (!scoreSent) { // 重複送信防止
+  if (!scoreSent) {
     saveScore(playerText, score);
     scoreSent = true;
   }
@@ -219,10 +218,20 @@ function saveScore(name, score) {
 }
 
 function loadHighScores() {
-  const highScoresContainer = document.getElementById("highScores");
-  
-  // ローディング表示
-  highScoresContainer.innerHTML = "<h3>Ranking...</h3>";
+  const container = document.getElementById("highScores");
+
+  // 即時表示：今回スコア＋点滅する「Ranking...」
+  container.innerHTML = `
+    <h3>Your Score</h3>
+    <p style="font-size:18px;">${score}</p>
+    <h3 style="animation: blink 1s infinite;">Ranking...</h3>
+    <style>
+      @keyframes blink {
+        0%, 50%, 100% { opacity: 1; }
+        25%, 75% { opacity: 0; }
+      }
+    </style>
+  `;
 
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
     .then(res => res.json())
@@ -236,11 +245,11 @@ function loadHighScores() {
           </li>`;
       });
       html += "</ul>";
-      highScoresContainer.innerHTML = html;
+      container.innerHTML = html;
 
-      // フェードイン表示
+      // フェードイン
       setTimeout(() => {
-        highScoresContainer.querySelectorAll('li').forEach(li => {
+        container.querySelectorAll('li').forEach(li => {
           li.style.opacity = 1;
         });
       }, 100);
