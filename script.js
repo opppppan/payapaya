@@ -1,4 +1,4 @@
-// canvas 初期化
+// === Canvas 初期化 ===
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 let width = window.innerWidth;
@@ -6,7 +6,7 @@ let height = window.innerHeight;
 canvas.width = width;
 canvas.height = height;
 
-// 変数
+// === 変数 ===
 let playerText = "";
 let playerX = width / 2;
 let playerY = height - 120;
@@ -21,7 +21,11 @@ let scoreSent = false;
 let movingLeft = false;
 let movingRight = false;
 
-// デコ文字マップ
+// === 名前データ ===
+let nameRaw = "";       // 入力した名前（アルファベット用）
+let nameIndex = 0;      // 弾に使用する文字のインデックス
+
+// === デコ文字（プレイヤー表示用） ===
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
   k:'ᴋ', l:'ʟ', m:'ᴍ', n:'ɴ', o:'ᴏ', p:'ᴘ', q:'ǫ', r:'ʀ', s:'s', t:'ᴛ',
@@ -45,26 +49,32 @@ function toFancyDeco(text) {
   }).join("");
 }
 
+// === 絵文字 ===
 const sushiEmoji = "🍣";
 const chickEmoji = "🐣";
 
-// イベント
+// === ゲーム開始 ===
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('retryBtn').addEventListener('click', () => location.reload());
-document.getElementById('btnLeft').addEventListener('mousedown', () => movingLeft = true);
-document.getElementById('btnLeft').addEventListener('mouseup', () => movingLeft = false);
-document.getElementById('btnRight').addEventListener('mousedown', () => movingRight = true);
-document.getElementById('btnRight').addEventListener('mouseup', () => movingRight = false);
-document.getElementById('btnShoot').addEventListener('click', () => { if(gameRunning) shootBullet(); });
 
-// タッチイベント（長押しコピー防止含む）
-['btnLeft','btnRight'].forEach(id=>{
-  document.getElementById(id).addEventListener('touchstart', (e) => { e.preventDefault(); movingLeft = (id==='btnLeft'); movingRight = (id==='btnRight'); }, { passive:false });
-  document.getElementById(id).addEventListener('touchend', (e) => { e.preventDefault(); movingLeft = false; movingRight = false; }, { passive:false });
-});
-document.getElementById('btnShoot').addEventListener('touchstart', (e) => { e.preventDefault(); if(gameRunning) shootBullet(); }, { passive:false });
+function startGame() {
+  const inputText = document.getElementById('textInput').value.trim();
+  if (!inputText) return;
 
-// キーボード
+  nameRaw = inputText.toUpperCase(); // 弾用（大文字）
+  playerText = toFancyDeco(inputText); // プレイヤー表示用デコ文字
+
+  document.getElementById('startScreen').classList.add('hidden');
+  canvas.style.display = 'block';
+  document.getElementById('controls').classList.remove('hidden');
+  gameRunning = true;
+  gameLoop();
+  spawnSushi();
+}
+
+// === 操作イベント ===
+
+// キーボード操作
 document.addEventListener('keydown', (e) => {
   if (!gameRunning) return;
   if (e.key === 'ArrowLeft') movingLeft = true;
@@ -76,23 +86,52 @@ document.addEventListener('keyup', (e) => {
   if (e.key === 'ArrowRight') movingRight = false;
 });
 
-// ゲーム開始
-function startGame() {
-  const inputText = document.getElementById('textInput').value.trim();
-  if (!inputText) return;
-  playerText = toFancyDeco(inputText);
-  document.getElementById('startScreen').classList.add('hidden');
-  canvas.style.display = 'block';
-  document.getElementById('controls').classList.remove('hidden');
-  gameRunning = true;
-  gameLoop();
-  spawnSushi();
-}
+// タッチ・ボタン操作
+['btnLeft','btnRight','btnShoot'].forEach(id=>{
+  const btn = document.getElementById(id);
 
+  btn.addEventListener('mousedown', () => {
+    if(id==='btnLeft') movingLeft = true;
+    if(id==='btnRight') movingRight = true;
+  });
+  btn.addEventListener('mouseup', () => {
+    if(id==='btnLeft') movingLeft = false;
+    if(id==='btnRight') movingRight = false;
+  });
+
+  btn.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // 長押しコピー防止
+    if(id==='btnLeft') movingLeft = true;
+    if(id==='btnRight') movingRight = true;
+    if(id==='btnShoot' && gameRunning) shootBullet();
+  }, { passive:false });
+
+  btn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    if(id==='btnLeft') movingLeft = false;
+    if(id==='btnRight') movingRight = false;
+  }, { passive:false });
+});
+
+// === ダブルタップズーム防止 ===
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+  const now = new Date().getTime();
+  if (now - lastTouchEnd <= 300) {
+    event.preventDefault();
+  }
+  lastTouchEnd = now;
+}, false);
+
+// === 弾発射（アルファベット仕様） ===
 function shootBullet() {
-  bullets.push({ x: playerX, y: playerY - 20 });
+  if (!nameRaw) return;
+  const char = nameRaw[nameIndex % nameRaw.length]; // 名前の文字を順番に使用
+  bullets.push({ x: playerX, y: playerY - 20, char: char });
+  nameIndex++;
 }
 
+// === 寿司生成 ===
 function spawnSushi() {
   if (!gameRunning) return;
   const isSushi = Math.random() < 0.7;
@@ -105,6 +144,7 @@ function spawnSushi() {
   setTimeout(spawnSushi, 1000);
 }
 
+// === プレイヤー移動 ===
 function updatePlayerPosition() {
   if (movingLeft) playerX -= 5;
   if (movingRight) playerX += 5;
@@ -112,26 +152,28 @@ function updatePlayerPosition() {
   if (playerX > width - 20) playerX = width - 20;
 }
 
+// === メインループ ===
 function gameLoop() {
   if (!gameRunning && !isGameOver) return;
   ctx.clearRect(0, 0, width, height);
 
   updatePlayerPosition();
 
+  // プレイヤー描画
   ctx.font = "24px sans-serif";
   ctx.fillStyle = "#000";
   ctx.textAlign = "center";
   ctx.fillText(playerText, playerX, playerY);
 
-  // 弾描画
+  // 弾描画（アルファベット）
   bullets.forEach((bullet, i) => {
     bullet.y -= 10;
-    ctx.font = "28px sans-serif";
-    ctx.fillText("●", bullet.x, bullet.y);
+    ctx.font = "24px sans-serif";
+    ctx.fillText(bullet.char, bullet.x, bullet.y);
     if (bullet.y < 0) bullets.splice(i, 1);
   });
 
-  // 寿司描画・衝突判定
+  // 寿司描画＆判定
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
     ctx.font = "24px sans-serif";
@@ -139,13 +181,13 @@ function gameLoop() {
 
     bullets.forEach((bullet, j) => {
       if (Math.abs(bullet.x - sushi.x) < 25 && Math.abs(bullet.y - sushi.y) < 25) {
-        effects.push({ type: 'explosion', x: sushi.x, y: sushi.y, life: 20 });
+        // 命中時にアルファベット花火
+        createLetterExplosion(bullet.char, sushi.x, sushi.y, sushi.type === 'sushi' ? 'green' : 'red');
+
         if (sushi.type === 'sushi') {
           score++;
-          effects.push({ type: 'score', x: sushi.x, y: sushi.y, life: 30, text: '+1', color: 'green' });
         } else {
           score--;
-          effects.push({ type: 'score', x: sushi.x, y: sushi.y, life: 30, text: '-1', color: 'red' });
         }
         sushiList.splice(i, 1);
         bullets.splice(j, 1);
@@ -161,26 +203,39 @@ function gameLoop() {
     }
   });
 
-  // エフェクト描画
+  // エフェクト描画（花火）
   effects.forEach((effect, i) => {
-    if (effect.type === 'explosion') {
-      ctx.font = "20px sans-serif";
-      ctx.fillStyle = "red";
-      ctx.fillText("💥", effect.x, effect.y);
-    } else if (effect.type === 'score') {
-      ctx.font = "16px sans-serif";
-      ctx.fillStyle = effect.color;
-      ctx.fillText(effect.text, effect.x, effect.y - (30 - effect.life));
-    }
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = effect.color;
+    ctx.fillText(effect.char, effect.x, effect.y);
+    effect.x += effect.vx;
+    effect.y += effect.vy;
     effect.life--;
     if (effect.life <= 0) effects.splice(i, 1);
   });
 
+  // スコア表示
   document.getElementById('scoreBoard').innerText = `Score: ${score} | Miss: ${miss}`;
 
   requestAnimationFrame(gameLoop);
 }
 
+// === アルファベット花火エフェクト ===
+function createLetterExplosion(char, x, y, color) {
+  for (let i = 0; i < 6; i++) {
+    effects.push({
+      char: char,
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4,
+      color: color,
+      life: 30
+    });
+  }
+}
+
+// === ゲーム終了・ランキング処理（既存仕様を維持） ===
 function endGame() {
   gameRunning = false;
   isGameOver = true;
@@ -192,16 +247,13 @@ function endGame() {
   }
 }
 
-// スコア保存・取得
 function saveScore(name, score) {
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec", {
     method: "POST",
     body: JSON.stringify({ name: name, score: score })
   })
   .then(res => res.text())
-  .then(() => {
-    loadHighScores();
-  })
+  .then(() => { loadHighScores(); })
   .catch(err => console.error("Fetch error:", err));
 }
 
@@ -259,18 +311,3 @@ function loadHighScores() {
       }, 100);
     });
 }
-
-// === ダブルタップズーム完全防止 ===
-let lastTouchTime = 0;
-document.addEventListener('touchstart', function (event) {
-  const now = new Date().getTime();
-  if (now - lastTouchTime <= 300) {
-    event.preventDefault();
-  }
-  lastTouchTime = now;
-}, { passive: false });
-
-// === 長押しコピー防止 ===
-document.addEventListener('contextmenu', function (e) {
-  e.preventDefault();
-});
