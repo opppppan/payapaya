@@ -3,18 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber Deco文字 - Sushi</title>
+  <title>Sushi Shooting Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <canvas id="bgCanvas"></canvas>
-
-  <div class="input-area">
+  <div class="start-screen" id="startScreen">
+    <h1>SUSHI SHOOTING</h1>
     <input type="text" id="textInput" placeholder="アルファベットを入力" maxlength="20">
-    <button id="generateBtn">表示</button>
+    <button id="startBtn">スタート</button>
   </div>
 
-  <div id="output" class="deco-text"></div>
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="scoreBoard">Score: 0 | Miss: 0</div>
+  <div id="gameOver" class="hidden">
+    <h2>Game Over</h2>
+    <p id="finalScore"></p>
+    <button id="retryBtn">リトライ</button>
+  </div>
 
   <script src="script.js"></script>
 </body>

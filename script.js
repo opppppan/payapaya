@@ -1,64 +1,41 @@
-// 背景星屑
-const canvas = document.getElementById("bgCanvas");
-const ctx = canvas.getContext("2d");
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+let width = window.innerWidth;
+let height = window.innerHeight;
+canvas.width = width;
+canvas.height = height;
 
-const stars = [];
-for (let i = 0; i < 80; i++) {
-  stars.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    r: Math.random() * 2 + 1,
-    dx: (Math.random() - 0.5) * 0.5,
-    dy: (Math.random() - 0.5) * 0.5,
-  });
-}
+// Player and game variables
+let playerText = "";
+let playerX = width / 2;
+let playerY = height - 80;
+let bullets = [];
+let sushiList = [];
+let effects = []; // For explosions and score effects
+let score = 0;
+let miss = 0;
+let gameRunning = false;
 
-function drawStars() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#ffffff";
-  stars.forEach(star => {
-    ctx.beginPath();
-    ctx.arc(star.x, star.y, star.r, 0, 2 * Math.PI);
-    ctx.fill();
-    star.x += star.dx;
-    star.y += star.dy;
-    if (star.x < 0 || star.x > canvas.width) star.dx *= -1;
-    if (star.y < 0 || star.y > canvas.height) star.dy *= -1;
-  });
-  requestAnimationFrame(drawStars);
-}
-drawStars();
-
-// 小文字デコ化用マップ
+// Unicode small caps map
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
   k:'ᴋ', l:'ʟ', m:'ᴍ', n:'ɴ', o:'ᴏ', p:'ᴘ', q:'ǫ', r:'ʀ', s:'s', t:'ᴛ',
   u:'ᴜ', v:'ᴠ', w:'ᴡ', x:'x', y:'ʏ', z:'ᴢ'
 };
 
-// 装飾マーク
-const diacritics = [
-  '͛','͝','͞','̷','̋','͡','͘','͒','͠'
-];
+// Diacritics for decoration
+const diacritics = ['͛','͝','͞','̷','̋','͡','͘','͒','͠'];
 
-// ランダムで2〜4個の装飾マークを付与
 function addDecoration(baseChar) {
   let decorated = baseChar;
-  const count = Math.floor(Math.random() * 3) + 2; // 2〜4個
+  const count = Math.floor(Math.random() * 3) + 2;
   for (let i = 0; i < count; i++) {
     decorated += diacritics[Math.floor(Math.random() * diacritics.length)];
   }
   return decorated;
 }
 
-// 入力文字をデコ変換
 function toFancyDeco(text) {
   return text
     .toLowerCase()
@@ -71,48 +48,118 @@ function toFancyDeco(text) {
     .join("");
 }
 
-// タイピングアニメーション
-function typeAnimation(element, text) {
-  element.textContent = "";
-  let i = 0;
-  function typing() {
-    if (i < text.length) {
-      element.textContent += text[i];
-      i++;
-      setTimeout(typing, 80);
-    }
-  }
-  typing();
-}
+// Sushi emojis (including gunkan and ikura variants)
+const sushiEmojis = ["🍣", "🍤", "🍥", "🍙", "🧡"];
 
-// イベント
-const textInput = document.getElementById("textInput");
-const generateBtn = document.getElementById("generateBtn");
-const output = document.getElementById("output");
+// Event listeners
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('retryBtn').addEventListener('click', () => location.reload());
 
-generateBtn.addEventListener("click", () => {
-  const text = textInput.value.trim();
-  if (text) {
-    const fancyText = toFancyDeco(text);
-    typeAnimation(output, fancyText);
-    spawnEmojis();
-  }
+document.addEventListener('keydown', (e) => {
+  if (!gameRunning) return;
+  if (e.key === 'ArrowLeft') playerX -= 20;
+  if (e.key === 'ArrowRight') playerX += 20;
+  if (e.key === ' ') shootBullet();
 });
 
-// 寿司絵文字のみ
-const emojis = ["🍣", "🍤", "🥢", "🍥"];
+canvas.addEventListener('click', (e) => {
+  if (!gameRunning) return;
+  const x = e.clientX;
+  if (x < width / 3) playerX -= 20;
+  else if (x > (width / 3) * 2) playerX += 20;
+  else shootBullet();
+});
 
-function spawnEmojis() {
-  for (let i = 0; i < 6; i++) {
-    const emoji = document.createElement("div");
-    emoji.classList.add("emoji");
-    emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    emoji.style.left = `${Math.random() * 100}%`;
-    emoji.style.top = `${50 + Math.random() * 20}%`;
-    document.body.appendChild(emoji);
+function startGame() {
+  const inputText = document.getElementById('textInput').value.trim();
+  if (!inputText) return;
+  playerText = toFancyDeco(inputText);
+  document.getElementById('startScreen').classList.add('hidden');
+  canvas.style.display = 'block';
+  gameRunning = true;
+  gameLoop();
+  spawnSushi();
+}
 
-    setTimeout(() => {
-      emoji.remove();
-    }, 6000);
-  }
+function shootBullet() {
+  bullets.push({ x: playerX, y: playerY - 20 });
+}
+
+function spawnSushi() {
+  if (!gameRunning) return;
+  sushiList.push({
+    x: Math.random() * (width - 50),
+    y: -30,
+    emoji: sushiEmojis[Math.floor(Math.random() * sushiEmojis.length)]
+  });
+  setTimeout(spawnSushi, 1000);
+}
+
+function gameLoop() {
+  if (!gameRunning) return;
+  ctx.clearRect(0, 0, width, height);
+
+  // Draw player
+  ctx.font = "24px sans-serif";
+  ctx.fillStyle = "#000";
+  ctx.textAlign = "center";
+  ctx.fillText(playerText, playerX, playerY);
+
+  // Draw bullets
+  ctx.fillStyle = "#000";
+  bullets.forEach((bullet, i) => {
+    bullet.y -= 10;
+    ctx.fillText("•", bullet.x, bullet.y);
+    if (bullet.y < 0) bullets.splice(i, 1);
+  });
+
+  // Draw sushi and handle collisions
+  sushiList.forEach((sushi, i) => {
+    sushi.y += 3;
+    ctx.fillText(sushi.emoji, sushi.x, sushi.y);
+
+    bullets.forEach((bullet, j) => {
+      if (Math.abs(bullet.x - sushi.x) < 20 && Math.abs(bullet.y - sushi.y) < 20) {
+        // Add explosion and score effect
+        effects.push({ type: 'explosion', x: sushi.x, y: sushi.y, life: 20 });
+        effects.push({ type: 'score', x: sushi.x, y: sushi.y, life: 30 });
+        sushiList.splice(i, 1);
+        bullets.splice(j, 1);
+        score++;
+      }
+    });
+
+    // Missed sushi
+    if (sushi.y > height) {
+      sushiList.splice(i, 1);
+      miss++;
+      if (miss >= 3) endGame();
+    }
+  });
+
+  // Draw effects
+  effects.forEach((effect, i) => {
+    if (effect.type === 'explosion') {
+      ctx.font = "20px sans-serif";
+      ctx.fillStyle = "red";
+      ctx.fillText("💥", effect.x, effect.y);
+    } else if (effect.type === 'score') {
+      ctx.font = "16px sans-serif";
+      ctx.fillStyle = "green";
+      ctx.fillText("+1", effect.x, effect.y - (30 - effect.life));
+    }
+    effect.life--;
+    if (effect.life <= 0) effects.splice(i, 1);
+  });
+
+  // Scoreboard
+  document.getElementById('scoreBoard').innerText = `Score: ${score} | Miss: ${miss}`;
+
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+  gameRunning = false;
+  document.getElementById('finalScore').innerText = `Your Score: ${score}`;
+  document.getElementById('gameOver').classList.remove('hidden');
 }
