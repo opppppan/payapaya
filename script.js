@@ -220,37 +220,77 @@ function saveScore(name, score) {
 function loadHighScores() {
   const container = document.getElementById("highScores");
 
-  // 即時表示：今回スコア＋点滅する「Ranking...」
+  // 即時表示：Your Score + Ranking...（点滅）
   container.innerHTML = `
-    <h3>Your Score</h3>
-    <p style="font-size:18px;">${score}</p>
-    <h3 style="animation: blink 1s infinite;">Ranking...</h3>
-    <style>
-      @keyframes blink {
-        0%, 50%, 100% { opacity: 1; }
-        25%, 75% { opacity: 0; }
-      }
-    </style>
+    <div style="
+      background:rgba(255,255,255,0.85);
+      padding:16px;
+      border-radius:12px;
+      box-shadow:0 4px 8px rgba(0,0,0,0.2);
+      max-width:300px;
+      margin:0 auto;
+    ">
+      <h3 style="margin:0 0 8px 0; text-align:center;">Your Score</h3>
+      <p style="font-size:20px; margin:0 0 16px 0; text-align:center;">${score}</p>
+      <h3 style="margin:0; text-align:center; animation: blink 1s infinite;">Ranking...</h3>
+      <style>
+        @keyframes blink {
+          0%, 50%, 100% { opacity: 1; }
+          25%, 75% { opacity: 0; }
+        }
+      </style>
+    </div>
   `;
 
+  // ランキングデータ取得
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
     .then(res => res.json())
     .then(data => {
-      let html = "<h3>High Scores</h3><ul style='list-style:none; padding:0;'>";
+      let html = `
+        <div style="
+          background:rgba(255,255,255,0.9);
+          padding:16px;
+          border-radius:12px;
+          box-shadow:0 4px 8px rgba(0,0,0,0.2);
+          max-width:300px;
+          margin:0 auto;
+        ">
+          <h3 style="margin:0 0 8px 0; text-align:center;">High Scores</h3>
+          <ul style='list-style:none; padding:0; margin:0;'>`;
+
       data.forEach((item, index) => {
+        // 順位カラー
+        let rankColor = "#444";
+        if (index === 0) rankColor = "#FFD700"; // 金
+        else if (index === 1) rankColor = "#C0C0C0"; // 銀
+        else if (index === 2) rankColor = "#CD7F32"; // 銅
+
         html += `
-          <li style="display:flex; justify-content:space-between; font-size:16px; border-bottom:1px solid #ddd; padding:4px 0; opacity:0; transition:opacity 0.5s ${index * 0.3}s;">
-            <span>${index + 1}. ${item[1]}</span>
-            <span>${item[0]}</span>
+          <li style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            font-size:16px;
+            border-bottom:1px solid #ddd;
+            padding:8px 0;
+            opacity:0;
+            transform:translateY(10px);
+            transition:all 0.5s ${index * 0.3}s;
+          ">
+            <span style="color:${rankColor}; font-weight:bold;">${index + 1}位</span>
+            <span style="flex:1; text-align:center;">${item[1]}</span>
+            <span style="font-weight:bold;">${item[0]}</span>
           </li>`;
       });
-      html += "</ul>";
+
+      html += `</ul></div>`;
       container.innerHTML = html;
 
-      // フェードイン
+      // フェード＆スライド表示
       setTimeout(() => {
         container.querySelectorAll('li').forEach(li => {
           li.style.opacity = 1;
+          li.style.transform = 'translateY(0)';
         });
       }, 100);
     });
