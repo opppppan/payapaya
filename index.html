@@ -2,46 +2,37 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SUSHI SHOOTING</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<!-- スタート画面 -->
-<div id="startScreen">
-  <h1>SUSHI SHOOTING</h1>
-  <!-- 横スクロール寿司 -->
-  <div class="sushi-scroll">
-    <div class="sushi-scroll-inner">
-      🍣🍣🍣🍣🍣
+  <div id="startScreen">
+    <h1>SUSHI SHOOTING</h1>
+    <div class="sushi-scroll">
+      <div class="sushi-scroll-inner">
+        🍣 🍣 🍣 🍣 🍣 🍣 🍣 🍣 🍣
+      </div>
     </div>
+    <input id="textInput" type="text" placeholder="アルファベットを入力">
+    <button id="startBtn">START</button>
   </div>
 
-  <input id="textInput" placeholder="アルファベットを入力">
-  <button id="startBtn">START</button>
-</div>
+  <canvas id="gameCanvas"></canvas>
+  <div id="scoreBoard"></div>
 
-<!-- ゲームキャンバス -->
-<canvas id="gameCanvas"></canvas>
+  <div id="controls" class="hidden">
+    <button id="btnLeft">◀</button>
+    <button id="btnShoot">SHOOT</button>
+    <button id="btnRight">▶</button>
+  </div>
 
-<!-- コントロールボタン -->
-<div id="controls" class="hidden">
-  <button id="btnLeft">◀</button>
-  <button id="btnShoot">SHOOT</button>
-  <button id="btnRight">▶</button>
-</div>
+  <div id="gameOver" class="hidden">
+    <h2 id="finalScore"></h2>
+    <div id="highScores"></div>
+    <button id="retryBtn">RETRY</button>
+  </div>
 
-<!-- スコア表示 -->
-<div id="scoreBoard"></div>
-
-<!-- ゲームオーバー画面 -->
-<div id="gameOver" class="hidden">
-  <p id="finalScore"></p>
-  <div id="highScores"></div>
-  <button id="retryBtn">RETRY</button>
-</div>
-
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
