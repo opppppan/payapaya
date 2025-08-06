@@ -6,6 +6,7 @@ body {
   text-align: center;
 }
 
+/* --- スタート画面 --- */
 #startScreen {
   position: absolute;
   top: 50%;
@@ -41,6 +42,7 @@ body {
   100% { transform: translateX(-50%); }
 }
 
+/* 入力欄 */
 #textInput {
   padding: 8px;
   font-size: 16px;
@@ -54,6 +56,7 @@ body {
   cursor: pointer;
 }
 
+/* --- ゲームキャンバス --- */
 #gameCanvas {
   display: none;
   position: absolute;
@@ -61,6 +64,16 @@ body {
   left: 0;
 }
 
+/* --- スコア表示 --- */
+#scoreBoard {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+}
+
+/* --- コントロールボタン --- */
 #controls {
   position: fixed;
   bottom: 20px;
@@ -71,23 +84,15 @@ body {
 }
 
 #controls button {
-  padding: 10px 20px;
-  font-size: 18px;
+  padding: 16px 28px;        /* 大きめに */
+  font-size: 22px;           /* 大きめに */
+  border-radius: 12px;       /* 角丸 */
+  border: 1px solid #ccc;
+  background: #f9f9f9;
   user-select: none;
 }
 
-#scoreBoard {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 20px;
-}
-
-.hidden {
-  display: none;
-}
-
+/* --- ゲームオーバー画面 --- */
 #gameOver {
   position: absolute;
   top: 50%;
@@ -97,4 +102,8 @@ body {
   padding: 20px;
   border-radius: 8px;
   text-align: center;
+}
+
+.hidden {
+  display: none;
 }
