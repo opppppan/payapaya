@@ -305,15 +305,16 @@ function drawFallingSushi() {
   ctx.fillStyle = "rgba(0,0,0,0.5)";
   ctx.fillRect(0, 0, width, height);
 
-  // テキスト基準中央
+  // テキスト中央基準
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
   // 寿司描画
+  ctx.font = "32px sans-serif"; // 大きめフォント
+  ctx.fillStyle = "#fff"; // 白色で見やすく
   fallingSushi.forEach(s => {
     s.y += s.speed;
-    ctx.font = "24px sans-serif";
-    ctx.fillText(s.emoji, s.x, s.y);
+    ctx.fillText("寿司", s.x, s.y);  // ★一時的に絵文字→TESTに変更
   });
 
   // 毎フレーム寿司追加
@@ -333,3 +334,4 @@ function drawFallingSushi() {
 
   requestAnimationFrame(drawFallingSushi);
 }
+
