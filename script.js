@@ -99,8 +99,8 @@ generateBtn.addEventListener("click", () => {
   }
 });
 
-// 寿司絵文字
-const emojis = ["🍣", "🍤", "🥢", "🍱", "🍥"];
+// 寿司絵文字のみ
+const emojis = ["🍣", "🍤", "🥢", "🍥"];
 
 function spawnEmojis() {
   for (let i = 0; i < 6; i++) {
