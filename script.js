@@ -164,21 +164,44 @@ function activateBugMode() {
   bugTimer = 180; // 約3秒
 }
 
-// === バグ演出描画 ===
+// === ファミコン風ドットグリッチ描画 ===
 function renderBugEffect() {
   if (!bugMode) return;
 
-  // 画面揺れ & 色反転フラッシュ
+  // 軽い画面揺れ
   ctx.save();
-  ctx.translate((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
-  ctx.fillStyle = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.3)`;
-  ctx.globalCompositeOperation = 'difference';
-  ctx.fillRect(0, 0, width, height);
+  ctx.translate((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5);
+
+  // レトロカラーパレット（白・黒・赤）
+  const colors = ['#ffffff', '#ff0000', '#000000'];
+
+  // ランダムドット
+  for (let i = 0; i < 25; i++) {
+    const x = Math.random() * width;
+    const y = Math.random() * height;
+    const w = (Math.random() * 3) + 2;
+    const h = (Math.random() * 3) + 2;
+    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+    ctx.fillRect(x, y, w, h);
+  }
+
+  // 横ラインノイズ
+  for (let j = 0; j < 2; j++) {
+    const y = Math.random() * height;
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(0, y, width, 2);
+  }
+
   ctx.restore();
 
-  // スコアボードをグリッチ風表示
+  // スコアボードをグリッチ風に
+  const glitchText = [
+    `S//C0RΞ=${score}`,
+    `§§CORE ${score}!`,
+    `S⟟⟟◎RΞ: ${score}`
+  ];
   document.getElementById('scoreBoard').innerText =
-    `S⟟⟟◎RΞ: ${score} | M!SS: ${miss}`;
+    `${glitchText[Math.floor(Math.random() * glitchText.length)]} | M!SS: ${miss}`;
 
   // タイマー管理
   bugTimer--;
