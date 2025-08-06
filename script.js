@@ -77,8 +77,6 @@ function startGame() {
 }
 
 // === 操作イベント ===
-
-// キーボード操作
 document.addEventListener('keydown', (e) => {
   if (!gameRunning) return;
   if (e.key === 'ArrowLeft') movingLeft = true;
@@ -223,11 +221,11 @@ function gameLoop() {
   ctx.textAlign = "center";
   ctx.fillText(playerText, playerX, playerY);
 
-  // ===== 三角マーカー描画（名前の上） =====
+  // ===== 三角マーカー描画（名前の上 少し上に） =====
   ctx.beginPath();
-  ctx.moveTo(playerX, playerY - 30);      // 頂点
-  ctx.lineTo(playerX - 6, playerY - 20);  // 左下
-  ctx.lineTo(playerX + 6, playerY - 20);  // 右下
+  ctx.moveTo(playerX, playerY - 40);      // 頂点（さらに上へ移動）
+  ctx.lineTo(playerX - 6, playerY - 30);  // 左下
+  ctx.lineTo(playerX + 6, playerY - 30);  // 右下
   ctx.closePath();
   ctx.fillStyle = "#000";
   ctx.fill();
@@ -257,13 +255,20 @@ function gameLoop() {
         }
 
         // 命中時にアルファベット花火
-        createLetterExplosion(bullet.char, sushi.x, sushi.y, sushi.type === 'sushi' ? 'green' : 'red');
+        createLetterExplosion(
+          bullet.char,
+          sushi.x,
+          sushi.y,
+          sushi.type === 'sushi' ? 'green' : 'red'
+        );
 
+        // スコア処理（寿司=+1 / ひよこ=-1）
         if (sushi.type === 'sushi') {
           score++;
-        } else {
+        } else if (sushi.type === 'chick') {
           score--;
         }
+
         sushiList.splice(i, 1);
         bullets.splice(j, 1);
       }
@@ -315,7 +320,7 @@ function createLetterExplosion(char, x, y, color) {
   }
 }
 
-// === ゲーム終了・ランキング処理（既存仕様） ===
+// === ゲーム終了・ランキング処理 ===
 function endGame() {
   gameRunning = false;
   isGameOver = true;
