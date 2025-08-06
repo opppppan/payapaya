@@ -207,17 +207,17 @@ function endGame() {
     scoreSent = true;
   }
 
-  // 初期寿司を複数生成してスタート
+  // 初期寿司を画面上〜少し上に配置
   for (let i = 0; i < 30; i++) {
     fallingSushi.push({
       x: Math.random() * width,
-      y: Math.random() * height - height,
+      y: Math.random() * -height / 2, // 画面上〜少し上からスタート
       speed: 1 + Math.random() * 2,
       emoji: sushiEmoji
     });
   }
 
-  // 寿司背景演出開始
+  // 寿司降下演出開始
   drawFallingSushi();
 }
 
@@ -306,6 +306,10 @@ function drawFallingSushi() {
   ctx.fillStyle = "rgba(0,0,0,0.5)";
   ctx.fillRect(0, 0, width, height);
 
+  // テキスト描画位置設定（中央基準）
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
   // 寿司描画
   fallingSushi.forEach(s => {
     s.y += s.speed;
@@ -313,7 +317,7 @@ function drawFallingSushi() {
     ctx.fillText(s.emoji, s.x, s.y);
   });
 
-  // 新規寿司追加
+  // 毎フレーム寿司追加
   for (let i = 0; i < 5; i++) {
     fallingSushi.push({
       x: Math.random() * width,
