@@ -64,11 +64,26 @@ html, body {
 }
 
 #controls button {
-  width: 70px;
-  height: 70px;
   font-size: 18px;
-  border-radius: 50%;
   border: none;
   background: rgba(0,0,0,0.1);
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 左右ボタンは丸 */
+#btnLeft, #btnRight {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+}
+
+/* 中央のSHOOTボタンは横長 */
+#btnShoot {
+  width: 100px;
+  height: 60px;
+  border-radius: 30px;
 }

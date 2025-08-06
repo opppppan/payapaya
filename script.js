@@ -69,6 +69,9 @@ document.addEventListener('keyup', (e) => {
   if (e.key === 'ArrowRight') movingRight = false;
 });
 
+// Prevent context menu (long press)
+document.addEventListener('contextmenu', e => e.preventDefault());
+
 // Button controls
 document.getElementById('btnLeft').addEventListener('mousedown', () => movingLeft = true);
 document.getElementById('btnLeft').addEventListener('touchstart', () => movingLeft = true);
