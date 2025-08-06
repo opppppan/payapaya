@@ -6,10 +6,8 @@ let height = window.innerHeight;
 canvas.width = width;
 canvas.height = height;
 
-// Player and game variables
 let playerText = "";
 let playerX = width / 2;
-// Raise the player name a bit higher
 let playerY = height - 120;
 let bullets = [];
 let sushiList = [];
@@ -18,11 +16,9 @@ let score = 0;
 let miss = 0;
 let gameRunning = false;
 
-// Movement flags
 let movingLeft = false;
 let movingRight = false;
 
-// Unicode small caps map
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
   k:'ᴋ', l:'ʟ', m:'ᴍ', n:'ɴ', o:'ᴏ', p:'ᴘ', q:'ǫ', r:'ʀ', s:'s', t:'ᴛ',
@@ -52,7 +48,6 @@ function toFancyDeco(text) {
     .join("");
 }
 
-// Emojis
 const sushiEmoji = "🍣";
 const chickEmoji = "🐣";
 
@@ -70,11 +65,9 @@ document.addEventListener('keyup', (e) => {
   if (e.key === 'ArrowRight') movingRight = false;
 });
 
-// Prevent context menu and zoom gestures
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('gesturestart', e => e.preventDefault());
 
-// Button controls
 document.getElementById('btnLeft').addEventListener('mousedown', () => movingLeft = true);
 document.getElementById('btnLeft').addEventListener('touchstart', () => movingLeft = true);
 document.getElementById('btnLeft').addEventListener('mouseup', () => movingLeft = false);
@@ -130,13 +123,11 @@ function gameLoop() {
 
   updatePlayerPosition();
 
-  // Draw player
   ctx.font = "24px sans-serif";
   ctx.fillStyle = "#000";
   ctx.textAlign = "center";
   ctx.fillText(playerText, playerX, playerY);
 
-  // Draw bullets
   ctx.fillStyle = "#000";
   bullets.forEach((bullet, i) => {
     bullet.y -= 10;
@@ -145,7 +136,6 @@ function gameLoop() {
     if (bullet.y < 0) bullets.splice(i, 1);
   });
 
-  // Draw sushi and handle collisions
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
     ctx.font = "24px sans-serif";
@@ -168,7 +158,6 @@ function gameLoop() {
 
     if (sushi.y > height) {
       sushiList.splice(i, 1);
-      // Only sushi increases miss count
       if (sushi.type === 'sushi') {
         miss++;
         if (miss >= 3) endGame();
@@ -176,7 +165,6 @@ function gameLoop() {
     }
   });
 
-  // Draw effects
   effects.forEach((effect, i) => {
     if (effect.type === 'explosion') {
       ctx.font = "20px sans-serif";
@@ -191,7 +179,6 @@ function gameLoop() {
     if (effect.life <= 0) effects.splice(i, 1);
   });
 
-  // Scoreboard
   document.getElementById('scoreBoard').innerText = `Score: ${score} | Miss: ${miss}`;
 
   requestAnimationFrame(gameLoop);
@@ -201,4 +188,28 @@ function endGame() {
   gameRunning = false;
   document.getElementById('finalScore').innerText = `Your Score: ${score}`;
   document.getElementById('gameOver').classList.remove('hidden');
+
+  saveScore(playerText, score);
+  loadHighScores();
+}
+
+function saveScore(name, score) {
+  fetch("https://script.google.com/macros/s/AKfycbxW07noxCKeS3G8FEPhAhhqqMT8uhJscURR8BGP7G9XcjT8tsCpExZ_1XF7fZ1nRDWQ4A/exec", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name, score: score })
+  });
+}
+
+function loadHighScores() {
+  fetch("https://script.google.com/macros/s/AKfycbxW07noxCKeS3G8FEPhAhhqqMT8uhJscURR8BGP7G9XcjT8tsCpExZ_1XF7fZ1nRDWQ4A/exec")
+    .then(res => res.json())
+    .then(data => {
+      let html = "<h3>High Scores</h3><ol>";
+      data.forEach(item => {
+        html += `<li>${item[1]} - ${item[0]}</li>`;
+      });
+      html += "</ol>";
+      document.getElementById("highScores").innerHTML = html;
+    });
 }

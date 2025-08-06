@@ -6,7 +6,7 @@ html, body {
   overflow: hidden;
   background: #ffffff;
   font-family: 'Orbitron', sans-serif;
-  touch-action: manipulation; /* Prevent double-tap zoom */
+  touch-action: manipulation;
 }
 
 .start-screen {
@@ -75,14 +75,12 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 左右ボタンは丸 */
 #btnLeft, #btnRight {
   width: 70px;
   height: 70px;
   border-radius: 50%;
 }
 
-/* 中央のSHOOTボタンは横長 */
 #btnShoot {
   width: 100px;
   height: 60px;
