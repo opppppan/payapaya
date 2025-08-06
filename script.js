@@ -18,11 +18,11 @@ let gameRunning = false;
 let isGameOver = false;
 let scoreSent = false;
 
+// 寿司降下演出用
+let fallingSushi = [];
+
 let movingLeft = false;
 let movingRight = false;
-
-// 寿司降下用
-let fallingSushi = [];
 
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
@@ -199,19 +199,22 @@ function gameLoop() {
 function endGame() {
   gameRunning = false;
   isGameOver = true;
-  document.getElementById('finalScore').innerText = `Your Score: ${score}`;
+
+  // canvasを最前面に
+  canvas.style.zIndex = "10";
   document.getElementById('gameOver').classList.remove('hidden');
+  document.getElementById('finalScore').innerText = `Your Score: ${score}`;
 
   if (!scoreSent) {
     saveScore(playerText, score);
     scoreSent = true;
   }
 
-  // 初期寿司を画面上端〜少し上から配置（すぐに見えるように）
+  // 初期寿司（画面内に配置）
   for (let i = 0; i < 30; i++) {
     fallingSushi.push({
       x: Math.random() * width,
-      y: -Math.random() * 50,  // -50〜0の範囲
+      y: Math.random() * height * 0.2, // 画面上部からスタート
       speed: 1 + Math.random() * 2,
       emoji: sushiEmoji
     });
@@ -235,7 +238,7 @@ function saveScore(name, score) {
 function loadHighScores() {
   const container = document.getElementById("highScores");
 
-  // 即時表示：Your Score + Ranking...（点滅）
+  // 即時表示：Your Score + Ranking...
   container.innerHTML = `
     <div style="text-align:center;">
       <h3 style="margin:0 0 8px 0;">Your Score</h3>
@@ -305,16 +308,15 @@ function drawFallingSushi() {
   ctx.fillStyle = "rgba(0,0,0,0.5)";
   ctx.fillRect(0, 0, width, height);
 
-  // テキスト中央基準
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  ctx.font = "32px sans-serif";
+  ctx.fillStyle = "#fff";
 
   // 寿司描画
-  ctx.font = "32px sans-serif"; // 大きめフォント
-  ctx.fillStyle = "#fff"; // 白色で見やすく
   fallingSushi.forEach(s => {
     s.y += s.speed;
-    ctx.fillText("寿司", s.x, s.y);  // ★一時的に絵文字→TESTに変更
+    ctx.fillText(s.emoji, s.x, s.y);
   });
 
   // 毎フレーム寿司追加
@@ -327,11 +329,9 @@ function drawFallingSushi() {
     });
   }
 
-  // 古い寿司削除
   if (fallingSushi.length > 500) {
     fallingSushi.splice(0, fallingSushi.length - 500);
   }
 
   requestAnimationFrame(drawFallingSushi);
 }
-
