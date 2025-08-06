@@ -21,6 +21,9 @@ let scoreSent = false;
 let movingLeft = false;
 let movingRight = false;
 
+// 寿司降下用
+let fallingSushi = [];
+
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
   k:'ᴋ', l:'ʟ', m:'ᴍ', n:'ɴ', o:'ᴏ', p:'ᴘ', q:'ǫ', r:'ʀ', s:'s', t:'ᴛ',
@@ -203,6 +206,9 @@ function endGame() {
     saveScore(playerText, score);
     scoreSent = true;
   }
+
+  // 寿司背景演出開始
+  drawFallingSushi();
 }
 
 function saveScore(name, score) {
@@ -235,7 +241,6 @@ function loadHighScores() {
     </div>
   `;
 
-  // ランキングデータ取得
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
     .then(res => res.json())
     .then(data => {
@@ -245,7 +250,6 @@ function loadHighScores() {
           <ul style='list-style:none; padding:0; margin:0; max-width:90%; margin:auto;'>`;
 
       data.forEach((item, index) => {
-        // 順位カラー
         let rankColor = "#444";
         if (index === 0) rankColor = "#FFD700"; // 金
         else if (index === 1) rankColor = "#C0C0C0"; // 銀
@@ -275,7 +279,6 @@ function loadHighScores() {
       html += `</ul></div>`;
       container.innerHTML = html;
 
-      // フェード＆スライド表示
       setTimeout(() => {
         container.querySelectorAll('li').forEach(li => {
           li.style.opacity = 1;
@@ -283,4 +286,41 @@ function loadHighScores() {
         });
       }, 100);
     });
+}
+
+// 寿司降下演出
+function spawnFallingSushi() {
+  for (let i = 0; i < 5; i++) {
+    fallingSushi.push({
+      x: Math.random() * width,
+      y: -30,
+      speed: 1 + Math.random() * 2,
+      emoji: sushiEmoji
+    });
+  }
+}
+
+function drawFallingSushi() {
+  ctx.clearRect(0, 0, width, height);
+
+  // 半透明背景
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(0, 0, width, height);
+
+  // 寿司描画
+  fallingSushi.forEach(s => {
+    s.y += s.speed;
+    ctx.font = "24px sans-serif";
+    ctx.fillText(s.emoji, s.x, s.y);
+  });
+
+  // 寿司追加
+  spawnFallingSushi();
+
+  // 古い寿司削除（メモリ対策）
+  if (fallingSushi.length > 500) {
+    fallingSushi.splice(0, fallingSushi.length - 500);
+  }
+
+  requestAnimationFrame(drawFallingSushi);
 }
