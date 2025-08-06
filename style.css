@@ -6,37 +6,33 @@ body {
   text-align: center;
 }
 
-/* --- スタート画面 --- */
+/* スタート画面 */
 #startScreen {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
-
 #startScreen h1 {
   font-size: 36px;
   margin-bottom: 20px;
 }
 
-/* 横スクロール寿司演出 */
+/* 横スクロール寿司 */
 .sushi-scroll {
   display: flex;
   white-space: nowrap;
   overflow: hidden;
   width: 100%;
   justify-content: center;
-  position: relative;
   margin-top: 10px;
   margin-bottom: 20px;
 }
-
 .sushi-scroll-inner {
   display: inline-block;
   animation: scroll-sushi 10s linear infinite;
   font-size: 28px;
 }
-
 @keyframes scroll-sushi {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
@@ -48,7 +44,6 @@ body {
   font-size: 16px;
   margin-top: 10px;
 }
-
 #startBtn {
   margin-top: 10px;
   padding: 8px 20px;
@@ -56,7 +51,7 @@ body {
   cursor: pointer;
 }
 
-/* --- ゲームキャンバス --- */
+/* ゲームキャンバス */
 #gameCanvas {
   display: none;
   position: absolute;
@@ -64,7 +59,7 @@ body {
   left: 0;
 }
 
-/* --- スコア表示 --- */
+/* スコア */
 #scoreBoard {
   position: fixed;
   top: 10px;
@@ -73,7 +68,7 @@ body {
   font-size: 20px;
 }
 
-/* --- コントロールボタン --- */
+/* コントロールボタン */
 #controls {
   position: fixed;
   bottom: 20px;
@@ -82,24 +77,18 @@ body {
   display: flex;
   gap: 20px;
 }
-
 #controls button {
-  padding: 16px 28px;        /* 大きめに */
-  font-size: 22px;           /* 大きめに */
-  border-radius: 12px;       /* 角丸 */
+  padding: 16px 28px;
+  font-size: 22px;
+  border-radius: 12px;
   border: 1px solid #ccc;
   background: #f9f9f9;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
-#controls button {
-  -webkit-user-select: none;   /* iOS用 */
-  -webkit-touch-callout: none; /* 長押しメニュー無効化 */
-  user-select: none;
-}
-
-
-/* --- ゲームオーバー画面 --- */
+/* ゲームオーバー */
 #gameOver {
   position: absolute;
   top: 50%;
@@ -111,6 +100,4 @@ body {
   text-align: center;
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
