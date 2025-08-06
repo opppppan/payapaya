@@ -29,6 +29,9 @@ let nameIndex = 0;      // 弾に使用する文字のインデックス
 let bugMode = false;
 let bugTimer = 0;
 
+// === たぬきモード ===
+let tanukiMode = false;
+
 // === デコ文字（プレイヤー表示用） ===
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
@@ -64,6 +67,11 @@ document.getElementById('retryBtn').addEventListener('click', () => location.rel
 function startGame() {
   const inputText = document.getElementById('textInput').value.trim();
   if (!inputText) return;
+
+  // TANU モード判定
+  if (inputText.toUpperCase() === "TANU") {
+    tanukiMode = true;
+  }
 
   nameRaw = inputText.toUpperCase(); // 弾用（大文字）
   playerText = toFancyDeco(inputText); // プレイヤー表示用デコ文字
@@ -147,11 +155,19 @@ function spawnSushi() {
   sushiList.push({
     x: Math.random() * (width - 50),
     y: -30,
-    emoji: isSushi ? sushiEmoji : chickEmoji,
+    emoji: tanukiMode ? "🦝" : (isSushi ? sushiEmoji : chickEmoji),
     type: isSushi ? 'sushi' : 'chick',
     giant: isGiant
   });
   setTimeout(spawnSushi, 1000);
+}
+
+// === スコア表示更新 ===
+function updateScoreBoard() {
+  document.getElementById('scoreBoard').innerText =
+    tanukiMode
+      ? `たぬ: ${score} | Miss: ${miss}`
+      : `Score: ${score} | Miss: ${miss}`;
 }
 
 // === プレイヤー移動 ===
@@ -197,9 +213,9 @@ function renderBugEffect() {
 
   // スコアボードをグリッチ風に
   const glitchText = [
-    `S//C0RΞ=${score}`,
-    `§§CORE ${score}!`,
-    `S⟟⟟◎RΞ: ${score}`
+    tanukiMode ? `たぬ// ${score}` : `S//C0RΞ=${score}`,
+    tanukiMode ? `§§たぬ ${score}!` : `§§CORE ${score}!`,
+    tanukiMode ? `T⟟⟟AΝU: ${score}` : `S⟟⟟◎RΞ: ${score}`
   ];
   document.getElementById('scoreBoard').innerText =
     `${glitchText[Math.floor(Math.random() * glitchText.length)]} | M!SS: ${miss}`;
@@ -234,9 +250,9 @@ function gameLoop() {
 
   // 三角マーカー
   ctx.beginPath();
-  ctx.moveTo(playerX, playerY - 40);
-  ctx.lineTo(playerX - 6, playerY - 30);
-  ctx.lineTo(playerX + 6, playerY - 30);
+  ctx.moveTo(playerX, playerY - 50);
+  ctx.lineTo(playerX - 6, playerY - 40);
+  ctx.lineTo(playerX + 6, playerY - 40);
   ctx.closePath();
   ctx.fillStyle = "#000";
   ctx.fill();
@@ -314,7 +330,7 @@ function gameLoop() {
 
   // スコア表示（通常時）
   if (!bugMode) {
-    document.getElementById('scoreBoard').innerText = `Score: ${score} | Miss: ${miss}`;
+    updateScoreBoard();
   }
 
   requestAnimationFrame(gameLoop);
@@ -376,7 +392,11 @@ function loadHighScores() {
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
     .then(res => res.json())
     .then(data => {
-      let html = `<div style="text-align:center;"><h3 style="margin:0 0 8px 0;">High Scores</h3><ul style='list-style:none; padding:0; margin:0; max-width:90%; margin:auto;'>`;
+      let html = `<div style="text-align:center;">
+        <h3 style="margin:0 0 8px 0;">
+          ${tanukiMode ? "High Tanus" : "High Scores"}
+        </h3>
+        <ul style='list-style:none; padding:0; margin:0; max-width:90%; margin:auto;'>`;
       data.forEach((item, index) => {
         let rankColor = "#444";
         if (index === 0) rankColor = "#FFD700";
