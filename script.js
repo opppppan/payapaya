@@ -13,7 +13,7 @@ let isGameOver = false;
 let score = 0;
 let miss = 0;
 
-// === プレイヤー（シューティング用） ===
+// === プレイヤー ===
 let playerText = "";
 let playerX = width / 2;
 let playerY = height - 120;
@@ -25,24 +25,20 @@ let effects = [];
 let movingLeft = false;
 let movingRight = false;
 
-// === プレイヤー（ランナー用） ===
-let runnerY = height - 80;     // 地面位置
+// === ランナー用 ===
+let runnerY = height - 130; // ← 50px上に調整
 let runnerVY = 0;
 let isJumping = false;
 const gravity = 0.6;
-
-// === ランナー用背景 & 障害物 ===
 let runnerObstacles = [];
 let runnerBgOffset = 0;
 
-// === バグモード ===
-let bugMode = false;
+// === バグ・特殊モード ===
+let bugMode = false;    // 上下反転バグ
 let bugTimer = 0;
+let tanukiMode = false; // TANU入力でたぬきモード
 
-// === たぬきモード ===
-let tanukiMode = false;
-
-// === デコ文字用マップ ===
+// === デコ文字 ===
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
   k:'ᴋ', l:'ʟ', m:'ᴍ', n:'ɴ', o:'ᴏ', p:'ᴘ', q:'ǫ', r:'ʀ', s:'s', t:'ᴛ',
@@ -78,9 +74,7 @@ function startGame() {
   const inputText = document.getElementById('textInput').value.trim();
   if (!inputText) return;
 
-  if (inputText.toUpperCase() === "TANU") {
-    tanukiMode = true;
-  }
+  if (inputText.toUpperCase() === "TANU") tanukiMode = true;
 
   nameRaw = inputText.toUpperCase();
   playerText = toFancyDeco(inputText);
@@ -94,23 +88,29 @@ function startGame() {
   spawnSushi();
 }
 
-// === 操作（シューティング用・ランナー共通） ===
-document.getElementById('btnShoot').addEventListener('click', () => {
+// === 操作（SHOOT反応改善）===
+function shootAction() {
   if (mode === "shooting") shootBullet();
   else if (mode === "runner") jumpRunner();
-});
+}
 
+// クリック・タッチ両対応
+document.getElementById('btnShoot').addEventListener('click', shootAction);
+document.getElementById('btnShoot').addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  shootAction();
+}, { passive: false });
+
+// キーボード用
 document.addEventListener('keydown', (e) => {
-  if (mode === "shooting" && e.key === ' ') shootBullet();
-  else if (mode === "runner" && e.key === ' ') jumpRunner();
+  if (e.key === ' ') shootAction();
 });
 
-// === 左右移動ボタン（長押し対応） ===
+// === 左右移動ボタン（長押し対応）===
 document.getElementById('btnLeft').addEventListener('touchstart', (e) => {
   e.preventDefault();
   movingLeft = true;
 }, { passive: false });
-
 document.getElementById('btnLeft').addEventListener('touchend', (e) => {
   e.preventDefault();
   movingLeft = false;
@@ -120,13 +120,12 @@ document.getElementById('btnRight').addEventListener('touchstart', (e) => {
   e.preventDefault();
   movingRight = true;
 }, { passive: false });
-
 document.getElementById('btnRight').addEventListener('touchend', (e) => {
   e.preventDefault();
   movingRight = false;
 }, { passive: false });
 
-// === シューティング・弾発射 ===
+// === 弾発射 ===
 function shootBullet() {
   if (!nameRaw) return;
   const char = bugMode ? sushiEmoji : nameRaw[nameIndex % nameRaw.length];
@@ -134,17 +133,20 @@ function shootBullet() {
   nameIndex++;
 }
 
-// === シューティング・寿司生成 ===
+// === 寿司生成 ===
 function spawnSushi() {
   if (!gameRunning || mode !== "shooting") return;
   const isSushi = Math.random() < 0.7;
-  const isGiant = Math.random() < 0.1;
+  let giantType = 0; // 0:通常 1:中(バグ) 2:大(ランナー)
+  if (Math.random() < 0.1) giantType = 1;
+  if (Math.random() < 0.05) giantType = 2;
+
   sushiList.push({
     x: Math.random() * (width - 50),
     y: -30,
     emoji: tanukiMode ? "🦝" : (isSushi ? sushiEmoji : chickEmoji),
     type: isSushi ? 'sushi' : 'chick',
-    giant: isGiant
+    giant: giantType
   });
   setTimeout(spawnSushi, 1000);
 }
@@ -155,7 +157,7 @@ function updateScoreBoard() {
     tanukiMode ? `たぬ: ${score} | Miss: ${miss}` : `Score: ${score} | Miss: ${miss}`;
 }
 
-// === プレイヤー移動（シューティング）===
+// === プレイヤー移動 ===
 function updatePlayerPosition() {
   if (movingLeft) playerX -= 5;
   if (movingRight) playerX += 5;
@@ -163,19 +165,24 @@ function updatePlayerPosition() {
   if (playerX > width - 20) playerX = width - 20;
 }
 
-// === 巨大寿司撃破 → ランナーモード突入 ===
+// === バグ発動（上下反転）===
+function activateBugMode() {
+  bugMode = true;
+  bugTimer = 300; // 5秒
+}
+
+// === ランナーモード発動 ===
 function activateRunnerMode() {
   mode = "runner";
   runnerObstacles = [];
   runnerBgOffset = 0;
-  runnerY = height - 80;
+  runnerY = height - 130;
   runnerVY = 0;
   isJumping = false;
 
   // 10秒後に戻す
   setTimeout(() => {
     mode = "shooting";
-    // 復帰演出
     ctx.save();
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.fillRect(0, 0, width, height);
@@ -185,6 +192,7 @@ function activateRunnerMode() {
     ctx.fillText("SYSTEM RESTORED", width / 2, height / 2);
     ctx.restore();
   }, 10000);
+  spawnRunnerObstacle();
 }
 
 // === ランナー・ジャンプ ===
@@ -195,13 +203,13 @@ function jumpRunner() {
   }
 }
 
-// === ランナー用・障害物生成 ===
+// === ランナー用障害物生成 ===
 function spawnRunnerObstacle() {
   if (mode !== "runner") return;
   const isSushi = Math.random() < 0.7;
   runnerObstacles.push({
     x: width,
-    y: height - 100,
+    y: height - 150,
     emoji: isSushi ? sushiEmoji : chickEmoji,
     type: isSushi ? 'sushi' : 'chick'
   });
@@ -211,29 +219,38 @@ function spawnRunnerObstacle() {
 // === メインループ ===
 function gameLoop() {
   if (!gameRunning && !isGameOver) return;
-
   ctx.clearRect(0, 0, width, height);
 
-  if (mode === "shooting") {
-    drawShooting();
-  } else if (mode === "runner") {
-    drawRunner();
+  if (bugMode) {
+    ctx.save();
+    ctx.translate(width, height);
+    ctx.rotate(Math.PI);
+    ctx.translate(-width, -height);
+  }
+
+  if (mode === "shooting") drawShooting();
+  else if (mode === "runner") drawRunner();
+
+  if (bugMode) ctx.restore();
+
+  if (bugMode) {
+    bugTimer--;
+    if (bugTimer <= 0) bugMode = false;
   }
 
   requestAnimationFrame(gameLoop);
 }
 
-// === 描画（シューティング）===
+// === シューティング描画 ===
 function drawShooting() {
   updatePlayerPosition();
 
-  // プレイヤー描画
   ctx.font = "24px sans-serif";
   ctx.fillStyle = "#000";
   ctx.textAlign = "center";
   ctx.fillText(playerText, playerX, playerY);
 
-  // 三角マーカー
+  // マーカー
   ctx.beginPath();
   ctx.moveTo(playerX, playerY - 50);
   ctx.lineTo(playerX - 6, playerY - 40);
@@ -242,7 +259,7 @@ function drawShooting() {
   ctx.fillStyle = "#000";
   ctx.fill();
 
-  // 弾描画
+  // 弾
   bullets.forEach((bullet, i) => {
     bullet.y -= 10;
     ctx.font = "24px sans-serif";
@@ -250,10 +267,12 @@ function drawShooting() {
     if (bullet.y < 0) bullets.splice(i, 1);
   });
 
-  // 寿司描画＆当たり判定
+  // 寿司
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
-    ctx.font = sushi.giant ? "48px sans-serif" : "24px sans-serif";
+    ctx.font = sushi.giant === 2 ? "64px sans-serif"
+      : sushi.giant === 1 ? "48px sans-serif"
+      : "24px sans-serif";
     ctx.fillStyle = sushi.giant ? "blue" : "#000";
     ctx.fillText(sushi.emoji, sushi.x, sushi.y);
 
@@ -261,10 +280,8 @@ function drawShooting() {
       if (Math.abs(bullet.x - sushi.x) < (sushi.giant ? 40 : 25) &&
           Math.abs(bullet.y - sushi.y) < (sushi.giant ? 40 : 25)) {
 
-        if (sushi.giant && sushi.type === 'sushi') {
-          activateRunnerMode();
-          spawnRunnerObstacle(); // 障害物生成開始
-        }
+        if (sushi.giant === 1 && sushi.type === 'sushi') activateBugMode();
+        if (sushi.giant === 2 && sushi.type === 'sushi') activateRunnerMode();
 
         if (sushi.type === 'sushi') {
           score++;
@@ -290,9 +307,9 @@ function drawShooting() {
   updateScoreBoard();
 }
 
-// === 描画（ランナー）===
+// === ランナー描画 ===
 function drawRunner() {
-  // 背景スクロール
+  // 背景
   runnerBgOffset -= 2;
   if (runnerBgOffset < -50) runnerBgOffset = 0;
   ctx.font = "20px sans-serif";
@@ -302,30 +319,26 @@ function drawRunner() {
   }
   ctx.globalAlpha = 1;
 
-  // 棒人間の物理
+  // 棒人間物理
   runnerY += runnerVY;
   runnerVY += gravity;
-  if (runnerY > height - 80) {
-    runnerY = height - 80;
+  if (runnerY > height - 130) {
+    runnerY = height - 130;
     isJumping = false;
   }
 
   // 棒人間描画
   drawStickFigure(playerX, runnerY);
 
-  // 障害物描画＆判定
+  // 障害物描画
   runnerObstacles.forEach((obs, i) => {
     obs.x -= 5;
     ctx.font = "32px sans-serif";
     ctx.fillText(obs.emoji, obs.x, obs.y);
 
-    // 当たり判定
     if (Math.abs(playerX - obs.x) < 20 && Math.abs(runnerY - obs.y) < 30) {
-      if (obs.type === 'sushi') {
-        score++;
-      } else {
-        miss++;
-      }
+      if (obs.type === 'sushi') score++;
+      else miss++;
       runnerObstacles.splice(i, 1);
     }
   });
@@ -335,26 +348,18 @@ function drawRunner() {
 function drawStickFigure(x, y) {
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
-  // 頭
   ctx.beginPath();
-  ctx.arc(x, y - 30, 10, 0, Math.PI * 2);
+  ctx.arc(x, y - 30, 10, 0, Math.PI * 2); // 頭
   ctx.stroke();
-  // 体
   ctx.beginPath();
   ctx.moveTo(x, y - 20);
-  ctx.lineTo(x, y);
-  ctx.stroke();
-  // 腕
-  ctx.beginPath();
+  ctx.lineTo(x, y); // 体
   ctx.moveTo(x, y - 20);
-  ctx.lineTo(x - 10, y - 10);
+  ctx.lineTo(x - 10, y - 10); // 腕
   ctx.moveTo(x, y - 20);
   ctx.lineTo(x + 10, y - 10);
-  ctx.stroke();
-  // 足
-  ctx.beginPath();
   ctx.moveTo(x, y);
-  ctx.lineTo(x - 10, y + 15);
+  ctx.lineTo(x - 10, y + 15); // 足
   ctx.moveTo(x, y);
   ctx.lineTo(x + 10, y + 15);
   ctx.stroke();
@@ -418,17 +423,14 @@ function loadHighScores() {
     });
 }
 
-// === ダブルタップズーム防止 ===
+// === ダブルタップズーム防止 & 長押しコピー防止 ===
 let lastTouchEnd = 0;
 document.addEventListener('touchend', function (event) {
   const now = new Date().getTime();
-  if (now - lastTouchEnd <= 300) {
-    event.preventDefault();
-  }
+  if (now - lastTouchEnd <= 300) event.preventDefault();
   lastTouchEnd = now;
 }, { passive: false });
 
-// === 長押しコピー防止 ===
 document.addEventListener('contextmenu', function (e) {
   e.preventDefault();
 });
