@@ -18,9 +18,6 @@ let gameRunning = false;
 let isGameOver = false;
 let scoreSent = false;
 
-// 寿司降下演出用
-let fallingSushi = [];
-
 let movingLeft = false;
 let movingRight = false;
 
@@ -200,8 +197,6 @@ function endGame() {
   gameRunning = false;
   isGameOver = true;
 
-  // canvasを最前面に
-  canvas.style.zIndex = "10";
   document.getElementById('gameOver').classList.remove('hidden');
   document.getElementById('finalScore').innerText = `Your Score: ${score}`;
 
@@ -209,18 +204,6 @@ function endGame() {
     saveScore(playerText, score);
     scoreSent = true;
   }
-
-  // 初期寿司（画面内に配置）
-  for (let i = 0; i < 30; i++) {
-    fallingSushi.push({
-      x: Math.random() * width,
-      y: Math.random() * height * 0.2, // 画面上部からスタート
-      speed: 1 + Math.random() * 2,
-      emoji: sushiEmoji
-    });
-  }
-
-  drawFallingSushi();
 }
 
 function saveScore(name, score) {
@@ -238,7 +221,6 @@ function saveScore(name, score) {
 function loadHighScores() {
   const container = document.getElementById("highScores");
 
-  // 即時表示：Your Score + Ranking...
   container.innerHTML = `
     <div style="text-align:center;">
       <h3 style="margin:0 0 8px 0;">Your Score</h3>
@@ -298,40 +280,4 @@ function loadHighScores() {
         });
       }, 100);
     });
-}
-
-// 寿司降下演出
-function drawFallingSushi() {
-  ctx.clearRect(0, 0, width, height);
-
-  // 半透明背景
-  ctx.fillStyle = "rgba(0,0,0,0.5)";
-  ctx.fillRect(0, 0, width, height);
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "32px sans-serif";
-  ctx.fillStyle = "#fff";
-
-  // 寿司描画
-  fallingSushi.forEach(s => {
-    s.y += s.speed;
-    ctx.fillText(s.emoji, s.x, s.y);
-  });
-
-  // 毎フレーム寿司追加
-  for (let i = 0; i < 5; i++) {
-    fallingSushi.push({
-      x: Math.random() * width,
-      y: -30,
-      speed: 1 + Math.random() * 2,
-      emoji: sushiEmoji
-    });
-  }
-
-  if (fallingSushi.length > 500) {
-    fallingSushi.splice(0, fallingSushi.length - 500);
-  }
-
-  requestAnimationFrame(drawFallingSushi);
 }
