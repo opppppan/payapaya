@@ -262,11 +262,12 @@ function gameLoop() {
           sushi.type === 'sushi' ? 'green' : 'red'
         );
 
-        // スコア処理（寿司=+1 / ひよこ=-1）
+        // スコア・miss処理
         if (sushi.type === 'sushi') {
-          score++;
+          score++;        // 寿司 → スコア加算
         } else if (sushi.type === 'chick') {
-          score--;
+          miss++;         // ひよこ → miss加算
+          if (miss >= 3) endGame();
         }
 
         sushiList.splice(i, 1);
