@@ -125,12 +125,18 @@ document.addEventListener('touchend', function (event) {
   lastTouchEnd = now;
 }, false);
 
-// === 弾発射（アルファベット仕様） ===
+// === 弾発射 ===
 function shootBullet() {
   if (!nameRaw) return;
-  const char = nameRaw[nameIndex % nameRaw.length]; // 名前の文字を順番に使用
-  bullets.push({ x: playerX, y: playerY - 20, char: char });
-  nameIndex++;
+  if (bugMode) {
+    // バグ中は寿司弾
+    bullets.push({ x: playerX, y: playerY - 20, char: sushiEmoji });
+  } else {
+    // 通常はアルファベット弾
+    const char = nameRaw[nameIndex % nameRaw.length];
+    bullets.push({ x: playerX, y: playerY - 20, char: char });
+    nameIndex++;
+  }
 }
 
 // === 寿司生成 ===
@@ -159,10 +165,10 @@ function updatePlayerPosition() {
 // === バグモード発動 ===
 function activateBugMode() {
   bugMode = true;
-  bugTimer = 180; // 約3秒
+  bugTimer = 300; // 約5秒
 }
 
-// === ファミコン風ドットグリッチ描画 ===
+// === ファミコン風グリッチ + 上下反転 + メッセージ ===
 function renderBugEffect() {
   if (!bugMode) return;
 
@@ -170,10 +176,8 @@ function renderBugEffect() {
   ctx.save();
   ctx.translate((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5);
 
-  // レトロカラーパレット（白・黒・赤）
-  const colors = ['#ffffff', '#ff0000', '#000000'];
-
   // ランダムドット
+  const colors = ['#ffffff', '#ff0000', '#000000'];
   for (let i = 0; i < 25; i++) {
     const x = Math.random() * width;
     const y = Math.random() * height;
@@ -183,14 +187,13 @@ function renderBugEffect() {
     ctx.fillRect(x, y, w, h);
   }
 
-  // 横ラインノイズ
-  for (let j = 0; j < 2; j++) {
-    const y = Math.random() * height;
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.fillRect(0, y, width, 2);
-  }
-
   ctx.restore();
+
+  // バグメッセージ（点滅）
+  ctx.font = "20px monospace";
+  ctx.fillStyle = Math.floor(Date.now() / 500) % 2 ? "#000" : "#ff0000";
+  ctx.textAlign = "center";
+  ctx.fillText("N̷͝O̵̕ ̵̅S̷͝Ū̶S̷͝H̴̕I̴̕…", width / 2, height - 20);
 
   // スコアボードをグリッチ風に
   const glitchText = [
@@ -211,7 +214,15 @@ function renderBugEffect() {
 // === メインループ ===
 function gameLoop() {
   if (!gameRunning && !isGameOver) return;
+
   ctx.clearRect(0, 0, width, height);
+
+  // === 画面反転開始 ===
+  if (bugMode) {
+    ctx.save();
+    ctx.translate(0, height);
+    ctx.scale(1, -1);
+  }
 
   updatePlayerPosition();
 
@@ -221,26 +232,26 @@ function gameLoop() {
   ctx.textAlign = "center";
   ctx.fillText(playerText, playerX, playerY);
 
-  // ===== 三角マーカー描画（名前の上 少し上に） =====
+  // 三角マーカー
   ctx.beginPath();
-  ctx.moveTo(playerX, playerY - 40);      // 頂点（さらに上へ移動）
-  ctx.lineTo(playerX - 6, playerY - 30);  // 左下
-  ctx.lineTo(playerX + 6, playerY - 30);  // 右下
+  ctx.moveTo(playerX, playerY - 40);
+  ctx.lineTo(playerX - 6, playerY - 30);
+  ctx.lineTo(playerX + 6, playerY - 30);
   ctx.closePath();
   ctx.fillStyle = "#000";
   ctx.fill();
 
-  // 弾描画（アルファベット）
+  // 弾描画
   bullets.forEach((bullet, i) => {
-    bullet.y -= bugMode ? 15 : 10; // バグ中は加速
+    bullet.y -= bugMode ? 15 : 10;
     ctx.font = "24px sans-serif";
     ctx.fillText(bullet.char, bullet.x, bullet.y);
     if (bullet.y < 0) bullets.splice(i, 1);
   });
 
-  // 寿司描画＆判定
+  // 寿司描画 & 当たり判定
   sushiList.forEach((sushi, i) => {
-    sushi.y += bugMode ? 5 : 3; // バグ中は加速
+    sushi.y += bugMode ? 5 : 3;
     ctx.font = sushi.giant ? "48px sans-serif" : "24px sans-serif";
     ctx.fillStyle = sushi.giant && sushi.type === 'sushi' ? "blue" : "#000";
     ctx.fillText(sushi.emoji, sushi.x, sushi.y);
@@ -249,12 +260,12 @@ function gameLoop() {
       if (Math.abs(bullet.x - sushi.x) < (sushi.giant ? 40 : 25) &&
           Math.abs(bullet.y - sushi.y) < (sushi.giant ? 40 : 25)) {
 
-        // 巨大寿司ならバグ発動
+        // 巨大寿司撃破でバグモード
         if (sushi.giant && sushi.type === 'sushi') {
           activateBugMode();
         }
 
-        // 命中時にアルファベット花火
+        // 花火エフェクト
         createLetterExplosion(
           bullet.char,
           sushi.x,
@@ -262,11 +273,11 @@ function gameLoop() {
           sushi.type === 'sushi' ? 'green' : 'red'
         );
 
-        // スコア・miss処理
+        // スコア or miss
         if (sushi.type === 'sushi') {
-          score++;        // 寿司 → スコア加算
+          score++;
         } else if (sushi.type === 'chick') {
-          miss++;         // ひよこ → miss加算
+          miss++;
           if (miss >= 3) endGame();
         }
 
@@ -284,7 +295,7 @@ function gameLoop() {
     }
   });
 
-  // エフェクト描画（花火）
+  // 花火エフェクト
   effects.forEach((effect, i) => {
     ctx.font = "16px sans-serif";
     ctx.fillStyle = effect.color;
@@ -295,10 +306,13 @@ function gameLoop() {
     if (effect.life <= 0) effects.splice(i, 1);
   });
 
+  // === 画面反転終了 ===
+  if (bugMode) ctx.restore();
+
   // バグ演出
   renderBugEffect();
 
-  // スコア表示（通常時のみ）
+  // スコア表示（通常時）
   if (!bugMode) {
     document.getElementById('scoreBoard').innerText = `Score: ${score} | Miss: ${miss}`;
   }
@@ -306,7 +320,7 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// === アルファベット花火エフェクト ===
+// === 花火エフェクト ===
 function createLetterExplosion(char, x, y, color) {
   for (let i = 0; i < 6; i++) {
     effects.push({
@@ -321,7 +335,7 @@ function createLetterExplosion(char, x, y, color) {
   }
 }
 
-// === ゲーム終了・ランキング処理 ===
+// === ゲーム終了・ランキング ===
 function endGame() {
   gameRunning = false;
   isGameOver = true;
