@@ -92,6 +92,13 @@ body {
   user-select: none;
 }
 
+#controls button {
+  -webkit-user-select: none;   /* iOS用 */
+  -webkit-touch-callout: none; /* 長押しメニュー無効化 */
+  user-select: none;
+}
+
+
 /* --- ゲームオーバー画面 --- */
 #gameOver {
   position: absolute;
