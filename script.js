@@ -15,7 +15,8 @@ let effects = [];
 let score = 0;
 let miss = 0;
 let gameRunning = false;
-let isGameOver = false; // ゲームオーバー時に背景半透明用
+let isGameOver = false; // ゲームオーバー状態フラグ
+let scoreSent = false;  // ★ 重複送信防止フラグ
 
 let movingLeft = false;
 let movingRight = false;
@@ -140,7 +141,7 @@ function gameLoop() {
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
 
-    // ゲームオーバー時は背景寿司を半透明に
+    // ゲームオーバー時は半透明
     if (isGameOver) {
       ctx.globalAlpha = 0.3;
     }
@@ -199,7 +200,10 @@ function endGame() {
   document.getElementById('finalScore').innerText = `Your Score: ${score}`;
   document.getElementById('gameOver').classList.remove('hidden');
 
-  saveScore(playerText, score); // ここでランキング更新はしない → saveScore内で実行
+  if (!scoreSent) { // 重複送信防止
+    saveScore(playerText, score);
+    scoreSent = true;
+  }
 }
 
 function saveScore(name, score) {
@@ -209,7 +213,6 @@ function saveScore(name, score) {
   })
   .then(res => res.text())
   .then(() => {
-    // POST完了後にランキング取得
     loadHighScores();
   })
   .catch(err => console.error("Fetch error:", err));
@@ -218,7 +221,7 @@ function saveScore(name, score) {
 function loadHighScores() {
   const highScoresContainer = document.getElementById("highScores");
   
-  // まずローディング表示
+  // ローディング表示
   highScoresContainer.innerHTML = "<h3>Ranking...</h3>";
 
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
@@ -235,7 +238,7 @@ function loadHighScores() {
       html += "</ul>";
       highScoresContainer.innerHTML = html;
 
-      // フェードイン
+      // フェードイン表示
       setTimeout(() => {
         highScoresContainer.querySelectorAll('li').forEach(li => {
           li.style.opacity = 1;
