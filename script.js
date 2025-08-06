@@ -222,17 +222,10 @@ function loadHighScores() {
 
   // 即時表示：Your Score + Ranking...（点滅）
   container.innerHTML = `
-    <div style="
-      background:rgba(255,255,255,0.85);
-      padding:16px;
-      border-radius:12px;
-      box-shadow:0 4px 8px rgba(0,0,0,0.2);
-      max-width:300px;
-      margin:0 auto;
-    ">
-      <h3 style="margin:0 0 8px 0; text-align:center;">Your Score</h3>
-      <p style="font-size:20px; margin:0 0 16px 0; text-align:center;">${score}</p>
-      <h3 style="margin:0; text-align:center; animation: blink 1s infinite;">Ranking...</h3>
+    <div style="text-align:center;">
+      <h3 style="margin:0 0 8px 0;">Your Score</h3>
+      <p style="font-size:20px; margin:0 0 16px 0;">${score}</p>
+      <h3 style="margin:0; animation: blink 1s infinite;">Ranking...</h3>
       <style>
         @keyframes blink {
           0%, 50%, 100% { opacity: 1; }
@@ -247,16 +240,9 @@ function loadHighScores() {
     .then(res => res.json())
     .then(data => {
       let html = `
-        <div style="
-          background:rgba(255,255,255,0.9);
-          padding:16px;
-          border-radius:12px;
-          box-shadow:0 4px 8px rgba(0,0,0,0.2);
-          max-width:300px;
-          margin:0 auto;
-        ">
-          <h3 style="margin:0 0 8px 0; text-align:center;">High Scores</h3>
-          <ul style='list-style:none; padding:0; margin:0;'>`;
+        <div style="text-align:center;">
+          <h3 style="margin:0 0 8px 0;">High Scores</h3>
+          <ul style='list-style:none; padding:0; margin:0; max-width:90%; margin:auto;'>`;
 
       data.forEach((item, index) => {
         // 順位カラー
@@ -276,10 +262,13 @@ function loadHighScores() {
             opacity:0;
             transform:translateY(10px);
             transition:all 0.5s ${index * 0.3}s;
+            word-break: break-word;
           ">
-            <span style="color:${rankColor}; font-weight:bold;">${index + 1}位</span>
-            <span style="flex:1; text-align:center;">${item[1]}</span>
-            <span style="font-weight:bold;">${item[0]}</span>
+            <span style="color:${rankColor}; font-weight:bold; min-width:40px;">${index + 1}位</span>
+            <span style="flex:1; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px;">
+              ${item[1]}
+            </span>
+            <span style="font-weight:bold; min-width:40px;">${item[0]}</span>
           </li>`;
       });
 
