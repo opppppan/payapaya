@@ -279,3 +279,22 @@ function loadHighScores() {
       }, 100);
     });
 }
+
+// === ダブルタップズーム防止 ===
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+  const now = new Date().getTime();
+  if (now - lastTouchEnd <= 300) {
+    event.preventDefault();
+  }
+  lastTouchEnd = now;
+}, false);
+
+// === ボタン長押しコピー防止 ===
+const buttons = document.querySelectorAll('#controls button');
+buttons.forEach(btn => {
+  btn.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // 長押しコピー防止
+  }, { passive: false });
+});
+
