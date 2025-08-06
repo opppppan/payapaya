@@ -140,15 +140,8 @@ function gameLoop() {
 
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
-
-    if (isGameOver) {
-      ctx.globalAlpha = 0.3;
-    }
-
     ctx.font = "24px sans-serif";
     ctx.fillText(sushi.emoji, sushi.x, sushi.y);
-
-    ctx.globalAlpha = 1.0;
 
     bullets.forEach((bullet, j) => {
       if (Math.abs(bullet.x - sushi.x) < 25 && Math.abs(bullet.y - sushi.y) < 25) {
@@ -245,9 +238,9 @@ function loadHighScores() {
 
       data.forEach((item, index) => {
         let rankColor = "#444";
-        if (index === 0) rankColor = "#FFD700"; // 金
-        else if (index === 1) rankColor = "#C0C0C0"; // 銀
-        else if (index === 2) rankColor = "#CD7F32"; // 銅
+        if (index === 0) rankColor = "#FFD700";
+        else if (index === 1) rankColor = "#C0C0C0";
+        else if (index === 2) rankColor = "#CD7F32";
 
         html += `
           <li style="
@@ -263,11 +256,15 @@ function loadHighScores() {
             word-break: break-word;
           ">
             <span style="color:${rankColor}; font-weight:bold; min-width:40px;">${index + 1}位</span>
-            <span style="flex:1; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px;">
-              ${item[0]} <!-- 名前 -->
+            <span style="
+              flex:1;
+              text-align:center;
+              white-space:normal;
+              word-break:break-word;
+              max-width:200px;">
+              ${item[0]}
             </span>
-            <span style="font-weight:bold; min-width:40px;">${item[1]} <!-- スコア -->
-            </span>
+            <span style="font-weight:bold; min-width:40px; text-align:right;">${item[1]}</span>
           </li>`;
       });
 
