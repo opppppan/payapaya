@@ -194,12 +194,17 @@ function endGame() {
 }
 
 function saveScore(name, score) {
+  console.log("saveScore called", name, score);
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: name, score: score })
-  });
+  })
+  .then(res => res.text())
+  .then(text => console.log("Response:", text))
+  .catch(err => console.error("Fetch error:", err));
 }
+
 
 function loadHighScores() {
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
