@@ -1,11 +1,12 @@
+// canvas 初期化
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-
 let width = window.innerWidth;
 let height = window.innerHeight;
 canvas.width = width;
 canvas.height = height;
 
+// 変数
 let playerText = "";
 let playerX = width / 2;
 let playerY = height - 120;
@@ -17,16 +18,15 @@ let miss = 0;
 let gameRunning = false;
 let isGameOver = false;
 let scoreSent = false;
-
 let movingLeft = false;
 let movingRight = false;
 
+// デコ文字マップ
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
   k:'ᴋ', l:'ʟ', m:'ᴍ', n:'ɴ', o:'ᴏ', p:'ᴘ', q:'ǫ', r:'ʀ', s:'s', t:'ᴛ',
   u:'ᴜ', v:'ᴠ', w:'ᴡ', x:'x', y:'ʏ', z:'ᴢ'
 };
-
 const diacritics = ['͛','͝','͞','̷','̋','͡','͘','͒','͠'];
 
 function addDecoration(baseChar) {
@@ -37,25 +37,34 @@ function addDecoration(baseChar) {
   }
   return decorated;
 }
-
 function toFancyDeco(text) {
-  return text
-    .toLowerCase()
-    .split("")
-    .map(ch => {
-      if (ch === " ") return " ";
-      const base = smallCapsMap[ch] || ch;
-      return addDecoration(base);
-    })
-    .join("");
+  return text.toLowerCase().split("").map(ch => {
+    if (ch === " ") return " ";
+    const base = smallCapsMap[ch] || ch;
+    return addDecoration(base);
+  }).join("");
 }
 
 const sushiEmoji = "🍣";
 const chickEmoji = "🐣";
 
+// イベント
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('retryBtn').addEventListener('click', () => location.reload());
+document.getElementById('btnLeft').addEventListener('mousedown', () => movingLeft = true);
+document.getElementById('btnLeft').addEventListener('mouseup', () => movingLeft = false);
+document.getElementById('btnRight').addEventListener('mousedown', () => movingRight = true);
+document.getElementById('btnRight').addEventListener('mouseup', () => movingRight = false);
+document.getElementById('btnShoot').addEventListener('click', () => { if(gameRunning) shootBullet(); });
 
+// タッチイベント（長押しコピー防止含む）
+['btnLeft','btnRight'].forEach(id=>{
+  document.getElementById(id).addEventListener('touchstart', (e) => { e.preventDefault(); movingLeft = (id==='btnLeft'); movingRight = (id==='btnRight'); }, { passive:false });
+  document.getElementById(id).addEventListener('touchend', (e) => { e.preventDefault(); movingLeft = false; movingRight = false; }, { passive:false });
+});
+document.getElementById('btnShoot').addEventListener('touchstart', (e) => { e.preventDefault(); if(gameRunning) shootBullet(); }, { passive:false });
+
+// キーボード
 document.addEventListener('keydown', (e) => {
   if (!gameRunning) return;
   if (e.key === 'ArrowLeft') movingLeft = true;
@@ -67,21 +76,7 @@ document.addEventListener('keyup', (e) => {
   if (e.key === 'ArrowRight') movingRight = false;
 });
 
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('gesturestart', e => e.preventDefault());
-
-document.getElementById('btnLeft').addEventListener('mousedown', () => movingLeft = true);
-document.getElementById('btnLeft').addEventListener('touchstart', () => movingLeft = true);
-document.getElementById('btnLeft').addEventListener('mouseup', () => movingLeft = false);
-document.getElementById('btnLeft').addEventListener('touchend', () => movingLeft = false);
-
-document.getElementById('btnRight').addEventListener('mousedown', () => movingRight = true);
-document.getElementById('btnRight').addEventListener('touchstart', () => movingRight = true);
-document.getElementById('btnRight').addEventListener('mouseup', () => movingRight = false);
-document.getElementById('btnRight').addEventListener('touchend', () => movingRight = false);
-
-document.getElementById('btnShoot').addEventListener('click', () => { if(gameRunning) shootBullet(); });
-
+// ゲーム開始
 function startGame() {
   const inputText = document.getElementById('textInput').value.trim();
   if (!inputText) return;
@@ -100,7 +95,6 @@ function shootBullet() {
 
 function spawnSushi() {
   if (!gameRunning) return;
-
   const isSushi = Math.random() < 0.7;
   sushiList.push({
     x: Math.random() * (width - 50),
@@ -108,7 +102,6 @@ function spawnSushi() {
     emoji: isSushi ? sushiEmoji : chickEmoji,
     type: isSushi ? 'sushi' : 'chick'
   });
-
   setTimeout(spawnSushi, 1000);
 }
 
@@ -130,7 +123,7 @@ function gameLoop() {
   ctx.textAlign = "center";
   ctx.fillText(playerText, playerX, playerY);
 
-  ctx.fillStyle = "#000";
+  // 弾描画
   bullets.forEach((bullet, i) => {
     bullet.y -= 10;
     ctx.font = "28px sans-serif";
@@ -138,6 +131,7 @@ function gameLoop() {
     if (bullet.y < 0) bullets.splice(i, 1);
   });
 
+  // 寿司描画・衝突判定
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
     ctx.font = "24px sans-serif";
@@ -167,6 +161,7 @@ function gameLoop() {
     }
   });
 
+  // エフェクト描画
   effects.forEach((effect, i) => {
     if (effect.type === 'explosion') {
       ctx.font = "20px sans-serif";
@@ -189,16 +184,15 @@ function gameLoop() {
 function endGame() {
   gameRunning = false;
   isGameOver = true;
-
   document.getElementById('gameOver').classList.remove('hidden');
   document.getElementById('finalScore').innerText = `Your Score: ${score}`;
-
   if (!scoreSent) {
     saveScore(playerText, score);
     scoreSent = true;
   }
 }
 
+// スコア保存・取得
 function saveScore(name, score) {
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec", {
     method: "POST",
@@ -213,7 +207,6 @@ function saveScore(name, score) {
 
 function loadHighScores() {
   const container = document.getElementById("highScores");
-
   container.innerHTML = `
     <div style="text-align:center;">
       <h3 style="margin:0 0 8px 0;">Your Score</h3>
@@ -231,11 +224,7 @@ function loadHighScores() {
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
     .then(res => res.json())
     .then(data => {
-      let html = `
-        <div style="text-align:center;">
-          <h3 style="margin:0 0 8px 0;">High Scores</h3>
-          <ul style='list-style:none; padding:0; margin:0; max-width:90%; margin:auto;'>`;
-
+      let html = `<div style="text-align:center;"><h3 style="margin:0 0 8px 0;">High Scores</h3><ul style='list-style:none; padding:0; margin:0; max-width:90%; margin:auto;'>`;
       data.forEach((item, index) => {
         let rankColor = "#444";
         if (index === 0) rankColor = "#FFD700";
@@ -253,21 +242,12 @@ function loadHighScores() {
             opacity:0;
             transform:translateY(10px);
             transition:all 0.5s ${index * 0.3}s;
-            word-break: break-word;
-          ">
+            word-break: break-word;">
             <span style="color:${rankColor}; font-weight:bold; min-width:40px;">${index + 1}位</span>
-            <span style="
-              flex:1;
-              text-align:center;
-              white-space:normal;
-              word-break:break-word;
-              max-width:200px;">
-              ${item[0]}
-            </span>
+            <span style="flex:1; text-align:center; white-space:normal; word-break:break-word; max-width:200px;">${item[0]}</span>
             <span style="font-weight:bold; min-width:40px; text-align:right;">${item[1]}</span>
           </li>`;
       });
-
       html += `</ul></div>`;
       container.innerHTML = html;
 
@@ -280,7 +260,7 @@ function loadHighScores() {
     });
 }
 
-// === ダブルタップズーム防止 ===
+// === ダブルタップズーム完全防止 ===
 let lastTouchTime = 0;
 document.addEventListener('touchstart', function (event) {
   const now = new Date().getTime();
@@ -292,7 +272,5 @@ document.addEventListener('touchstart', function (event) {
 
 // === 長押しコピー防止 ===
 document.addEventListener('contextmenu', function (e) {
-  e.preventDefault(); // 長押し時のコピー/ペーストメニューを無効化
+  e.preventDefault();
 });
-
-
