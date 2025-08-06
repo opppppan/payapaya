@@ -6,6 +6,7 @@ html, body {
   overflow: hidden;
   background: #ffffff;
   font-family: 'Orbitron', sans-serif;
+  touch-action: manipulation; /* Prevent double-tap zoom */
 }
 
 .start-screen {

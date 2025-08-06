@@ -9,7 +9,8 @@ canvas.height = height;
 // Player and game variables
 let playerText = "";
 let playerX = width / 2;
-let playerY = height - 80;
+// Raise the player name a bit higher
+let playerY = height - 120;
 let bullets = [];
 let sushiList = [];
 let effects = [];
@@ -69,8 +70,9 @@ document.addEventListener('keyup', (e) => {
   if (e.key === 'ArrowRight') movingRight = false;
 });
 
-// Prevent context menu (long press)
+// Prevent context menu and zoom gestures
 document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('gesturestart', e => e.preventDefault());
 
 // Button controls
 document.getElementById('btnLeft').addEventListener('mousedown', () => movingLeft = true);
@@ -166,8 +168,11 @@ function gameLoop() {
 
     if (sushi.y > height) {
       sushiList.splice(i, 1);
-      miss++;
-      if (miss >= 3) endGame();
+      // Only sushi increases miss count
+      if (sushi.type === 'sushi') {
+        miss++;
+        if (miss >= 3) endGame();
+      }
     }
   });
 
