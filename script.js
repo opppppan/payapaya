@@ -12,7 +12,7 @@ let playerX = width / 2;
 let playerY = height - 80;
 let bullets = [];
 let sushiList = [];
-let effects = []; // For explosions and score effects
+let effects = [];
 let score = 0;
 let miss = 0;
 let gameRunning = false;
@@ -24,7 +24,6 @@ const smallCapsMap = {
   u:'ᴜ', v:'ᴠ', w:'ᴡ', x:'x', y:'ʏ', z:'ᴢ'
 };
 
-// Diacritics for decoration
 const diacritics = ['͛','͝','͞','̷','̋','͡','͘','͒','͠'];
 
 function addDecoration(baseChar) {
@@ -48,10 +47,10 @@ function toFancyDeco(text) {
     .join("");
 }
 
-// Sushi emojis (including gunkan and ikura variants)
-const sushiEmojis = ["🍣", "🍤", "🍥", "🍙", "🧡"];
+// Only two emojis: sushi and chick
+const sushiEmoji = "🍣";
+const chickEmoji = "🐣";
 
-// Event listeners
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('retryBtn').addEventListener('click', () => location.reload());
 
@@ -62,13 +61,10 @@ document.addEventListener('keydown', (e) => {
   if (e.key === ' ') shootBullet();
 });
 
-canvas.addEventListener('click', (e) => {
-  if (!gameRunning) return;
-  const x = e.clientX;
-  if (x < width / 3) playerX -= 20;
-  else if (x > (width / 3) * 2) playerX += 20;
-  else shootBullet();
-});
+// Button controls
+document.getElementById('btnLeft').addEventListener('click', () => { if(gameRunning) playerX -= 20; });
+document.getElementById('btnRight').addEventListener('click', () => { if(gameRunning) playerX += 20; });
+document.getElementById('btnShoot').addEventListener('click', () => { if(gameRunning) shootBullet(); });
 
 function startGame() {
   const inputText = document.getElementById('textInput').value.trim();
@@ -76,6 +72,7 @@ function startGame() {
   playerText = toFancyDeco(inputText);
   document.getElementById('startScreen').classList.add('hidden');
   canvas.style.display = 'block';
+  document.getElementById('controls').classList.remove('hidden');
   gameRunning = true;
   gameLoop();
   spawnSushi();
@@ -87,11 +84,16 @@ function shootBullet() {
 
 function spawnSushi() {
   if (!gameRunning) return;
+
+  // 70% sushi, 30% chick
+  const isSushi = Math.random() < 0.7;
   sushiList.push({
     x: Math.random() * (width - 50),
     y: -30,
-    emoji: sushiEmojis[Math.floor(Math.random() * sushiEmojis.length)]
+    emoji: isSushi ? sushiEmoji : chickEmoji,
+    type: isSushi ? 'sushi' : 'chick'
   });
+
   setTimeout(spawnSushi, 1000);
 }
 
@@ -120,16 +122,19 @@ function gameLoop() {
 
     bullets.forEach((bullet, j) => {
       if (Math.abs(bullet.x - sushi.x) < 20 && Math.abs(bullet.y - sushi.y) < 20) {
-        // Add explosion and score effect
         effects.push({ type: 'explosion', x: sushi.x, y: sushi.y, life: 20 });
-        effects.push({ type: 'score', x: sushi.x, y: sushi.y, life: 30 });
+        if (sushi.type === 'sushi') {
+          score++;
+          effects.push({ type: 'score', x: sushi.x, y: sushi.y, life: 30, text: '+1', color: 'green' });
+        } else {
+          score--;
+          effects.push({ type: 'score', x: sushi.x, y: sushi.y, life: 30, text: '-1', color: 'red' });
+        }
         sushiList.splice(i, 1);
         bullets.splice(j, 1);
-        score++;
       }
     });
 
-    // Missed sushi
     if (sushi.y > height) {
       sushiList.splice(i, 1);
       miss++;
@@ -145,8 +150,8 @@ function gameLoop() {
       ctx.fillText("💥", effect.x, effect.y);
     } else if (effect.type === 'score') {
       ctx.font = "16px sans-serif";
-      ctx.fillStyle = "green";
-      ctx.fillText("+1", effect.x, effect.y - (30 - effect.life));
+      ctx.fillStyle = effect.color;
+      ctx.fillText(effect.text, effect.x, effect.y - (30 - effect.life));
     }
     effect.life--;
     if (effect.life <= 0) effects.splice(i, 1);
