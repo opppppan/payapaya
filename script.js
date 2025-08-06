@@ -194,13 +194,15 @@ function endGame() {
 }
 
 function saveScore(name, score) {
-  console.log("saveScore called", name, score);
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec", {
     method: "POST",
     body: JSON.stringify({ name: name, score: score })
   })
   .then(res => res.text())
-  .then(text => console.log("Response:", text))
+  .then(() => {
+    // POST成功後にランキング取得
+    loadHighScores();
+  })
   .catch(err => console.error("Fetch error:", err));
 }
 
@@ -210,11 +212,15 @@ function loadHighScores() {
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
     .then(res => res.json())
     .then(data => {
-      let html = "<h3>High Scores</h3><ol>";
-      data.forEach(item => {
-        html += `<li>${item[1]} - ${item[0]}</li>`;
+      let html = "<h3>High Scores</h3><ul style='list-style:none; padding:0;'>";
+      data.forEach((item, index) => {
+        html += `
+          <li style="display:flex; justify-content:space-between; font-size:16px; border-bottom:1px solid #ddd; padding:4px 0;">
+            <span>${index + 1}. ${item[1]}</span>
+            <span>${item[0]}</span>
+          </li>`;
       });
-      html += "</ol>";
+      html += "</ul>";
       document.getElementById("highScores").innerHTML = html;
     });
 }
