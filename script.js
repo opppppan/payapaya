@@ -15,7 +15,7 @@ let effects = [];
 let score = 0;
 let miss = 0;
 let gameRunning = false;
-let isGameOver = false; // ★追加：ゲームオーバーフラグ
+let isGameOver = false; // ゲームオーバー時に背景半透明用
 
 let movingLeft = false;
 let movingRight = false;
@@ -140,7 +140,7 @@ function gameLoop() {
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
 
-    // ★ランキング中は背景を半透明に
+    // ゲームオーバー時は背景寿司を半透明に
     if (isGameOver) {
       ctx.globalAlpha = 0.3;
     }
@@ -195,11 +195,11 @@ function gameLoop() {
 
 function endGame() {
   gameRunning = false;
-  isGameOver = true; // ★追加
+  isGameOver = true;
   document.getElementById('finalScore').innerText = `Your Score: ${score}`;
   document.getElementById('gameOver').classList.remove('hidden');
 
-  saveScore(playerText, score);
+  saveScore(playerText, score); // ここでランキング更新はしない → saveScore内で実行
 }
 
 function saveScore(name, score) {
@@ -209,25 +209,37 @@ function saveScore(name, score) {
   })
   .then(res => res.text())
   .then(() => {
-    // POST成功後にランキング取得
+    // POST完了後にランキング取得
     loadHighScores();
   })
   .catch(err => console.error("Fetch error:", err));
 }
 
 function loadHighScores() {
+  const highScoresContainer = document.getElementById("highScores");
+  
+  // まずローディング表示
+  highScoresContainer.innerHTML = "<h3>Ranking...</h3>";
+
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
     .then(res => res.json())
     .then(data => {
       let html = "<h3>High Scores</h3><ul style='list-style:none; padding:0;'>";
       data.forEach((item, index) => {
         html += `
-          <li style="display:flex; justify-content:space-between; font-size:16px; border-bottom:1px solid #ddd; padding:4px 0;">
+          <li style="display:flex; justify-content:space-between; font-size:16px; border-bottom:1px solid #ddd; padding:4px 0; opacity:0; transition:opacity 0.5s ${index * 0.3}s;">
             <span>${index + 1}. ${item[1]}</span>
             <span>${item[0]}</span>
           </li>`;
       });
       html += "</ul>";
-      document.getElementById("highScores").innerHTML = html;
+      highScoresContainer.innerHTML = html;
+
+      // フェードイン
+      setTimeout(() => {
+        highScoresContainer.querySelectorAll('li').forEach(li => {
+          li.style.opacity = 1;
+        });
+      }, 100);
     });
 }
