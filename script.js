@@ -17,6 +17,10 @@ let score = 0;
 let miss = 0;
 let gameRunning = false;
 
+// Movement flags
+let movingLeft = false;
+let movingRight = false;
+
 // Unicode small caps map
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
@@ -47,7 +51,7 @@ function toFancyDeco(text) {
     .join("");
 }
 
-// Only two emojis: sushi and chick
+// Emojis
 const sushiEmoji = "🍣";
 const chickEmoji = "🐣";
 
@@ -56,14 +60,26 @@ document.getElementById('retryBtn').addEventListener('click', () => location.rel
 
 document.addEventListener('keydown', (e) => {
   if (!gameRunning) return;
-  if (e.key === 'ArrowLeft') playerX -= 20;
-  if (e.key === 'ArrowRight') playerX += 20;
+  if (e.key === 'ArrowLeft') movingLeft = true;
+  if (e.key === 'ArrowRight') movingRight = true;
   if (e.key === ' ') shootBullet();
+});
+document.addEventListener('keyup', (e) => {
+  if (e.key === 'ArrowLeft') movingLeft = false;
+  if (e.key === 'ArrowRight') movingRight = false;
 });
 
 // Button controls
-document.getElementById('btnLeft').addEventListener('click', () => { if(gameRunning) playerX -= 20; });
-document.getElementById('btnRight').addEventListener('click', () => { if(gameRunning) playerX += 20; });
+document.getElementById('btnLeft').addEventListener('mousedown', () => movingLeft = true);
+document.getElementById('btnLeft').addEventListener('touchstart', () => movingLeft = true);
+document.getElementById('btnLeft').addEventListener('mouseup', () => movingLeft = false);
+document.getElementById('btnLeft').addEventListener('touchend', () => movingLeft = false);
+
+document.getElementById('btnRight').addEventListener('mousedown', () => movingRight = true);
+document.getElementById('btnRight').addEventListener('touchstart', () => movingRight = true);
+document.getElementById('btnRight').addEventListener('mouseup', () => movingRight = false);
+document.getElementById('btnRight').addEventListener('touchend', () => movingRight = false);
+
 document.getElementById('btnShoot').addEventListener('click', () => { if(gameRunning) shootBullet(); });
 
 function startGame() {
@@ -85,7 +101,6 @@ function shootBullet() {
 function spawnSushi() {
   if (!gameRunning) return;
 
-  // 70% sushi, 30% chick
   const isSushi = Math.random() < 0.7;
   sushiList.push({
     x: Math.random() * (width - 50),
@@ -97,9 +112,18 @@ function spawnSushi() {
   setTimeout(spawnSushi, 1000);
 }
 
+function updatePlayerPosition() {
+  if (movingLeft) playerX -= 5;
+  if (movingRight) playerX += 5;
+  if (playerX < 20) playerX = 20;
+  if (playerX > width - 20) playerX = width - 20;
+}
+
 function gameLoop() {
   if (!gameRunning) return;
   ctx.clearRect(0, 0, width, height);
+
+  updatePlayerPosition();
 
   // Draw player
   ctx.font = "24px sans-serif";
@@ -111,17 +135,19 @@ function gameLoop() {
   ctx.fillStyle = "#000";
   bullets.forEach((bullet, i) => {
     bullet.y -= 10;
-    ctx.fillText("•", bullet.x, bullet.y);
+    ctx.font = "28px sans-serif";
+    ctx.fillText("●", bullet.x, bullet.y);
     if (bullet.y < 0) bullets.splice(i, 1);
   });
 
   // Draw sushi and handle collisions
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
+    ctx.font = "24px sans-serif";
     ctx.fillText(sushi.emoji, sushi.x, sushi.y);
 
     bullets.forEach((bullet, j) => {
-      if (Math.abs(bullet.x - sushi.x) < 20 && Math.abs(bullet.y - sushi.y) < 20) {
+      if (Math.abs(bullet.x - sushi.x) < 25 && Math.abs(bullet.y - sushi.y) < 25) {
         effects.push({ type: 'explosion', x: sushi.x, y: sushi.y, life: 20 });
         if (sushi.type === 'sushi') {
           score++;
