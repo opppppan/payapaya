@@ -194,7 +194,7 @@ function endGame() {
 }
 
 function saveScore(name, score) {
-  fetch("https://script.google.com/macros/s/AKfycbxW07noxCKeS3G8FEPhAhhqqMT8uhJscURR8BGP7G9XcjT8tsCpExZ_1XF7fZ1nRDWQ4A/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: name, score: score })
@@ -202,7 +202,7 @@ function saveScore(name, score) {
 }
 
 function loadHighScores() {
-  fetch("https://script.google.com/macros/s/AKfycbxW07noxCKeS3G8FEPhAhhqqMT8uhJscURR8BGP7G9XcjT8tsCpExZ_1XF7fZ1nRDWQ4A/exec")
+  fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
     .then(res => res.json())
     .then(data => {
       let html = "<h3>High Scores</h3><ol>";
