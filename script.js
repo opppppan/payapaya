@@ -26,7 +26,7 @@ let movingLeft = false;
 let movingRight = false;
 
 // === ランナー用 ===
-let runnerY = height - 130; // ← 50px上に調整
+let runnerY = height - 130; // 操作ボタンと被らない位置
 let runnerVY = 0;
 let isJumping = false;
 const gravity = 0.6;
@@ -94,7 +94,7 @@ function shootAction() {
   else if (mode === "runner") jumpRunner();
 }
 
-// クリック・タッチ両対応
+// クリック・タッチ両対応（即時反応）
 document.getElementById('btnShoot').addEventListener('click', shootAction);
 document.getElementById('btnShoot').addEventListener('touchstart', (e) => {
   e.preventDefault();
@@ -137,9 +137,12 @@ function shootBullet() {
 function spawnSushi() {
   if (!gameRunning || mode !== "shooting") return;
   const isSushi = Math.random() < 0.7;
-  let giantType = 0; // 0:通常 1:中(バグ) 2:大(ランナー)
-  if (Math.random() < 0.1) giantType = 1;
-  if (Math.random() < 0.05) giantType = 2;
+
+  // 巨大寿司タイプ
+  let giantType = 0;
+  const r = Math.random();
+  if (r < 0.15) giantType = 1;   // 中サイズ（反転）
+  else if (r < 0.25) giantType = 2; // 大サイズ（ランナー）
 
   sushiList.push({
     x: Math.random() * (width - 50),
@@ -221,11 +224,12 @@ function gameLoop() {
   if (!gameRunning && !isGameOver) return;
   ctx.clearRect(0, 0, width, height);
 
+  // 反転バグ中
   if (bugMode) {
     ctx.save();
-    ctx.translate(width, height);
-    ctx.rotate(Math.PI);
-    ctx.translate(-width, -height);
+    ctx.translate(width / 2, height / 2);
+    ctx.scale(1, -1);
+    ctx.translate(-width / 2, -height / 2);
   }
 
   if (mode === "shooting") drawShooting();
