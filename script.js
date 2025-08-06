@@ -26,7 +26,7 @@ let movingLeft = false;
 let movingRight = false;
 
 // === ランナー用 ===
-let runnerY = height - 130; // 操作ボタンと被らない位置
+let runnerY = height - 130;
 let runnerVY = 0;
 let isJumping = false;
 const gravity = 0.6;
@@ -34,9 +34,9 @@ let runnerObstacles = [];
 let runnerBgOffset = 0;
 
 // === バグ・特殊モード ===
-let bugMode = false;    // 上下反転バグ
+let bugMode = false;
 let bugTimer = 0;
-let tanukiMode = false; // TANU入力でたぬきモード
+let tanukiMode = false;
 
 // === デコ文字 ===
 const smallCapsMap = {
@@ -94,19 +94,20 @@ function shootAction() {
   else if (mode === "runner") jumpRunner();
 }
 
-// クリック・タッチ両対応（即時反応）
+// クリック・タッチ両対応
 document.getElementById('btnShoot').addEventListener('click', shootAction);
 document.getElementById('btnShoot').addEventListener('touchstart', (e) => {
   e.preventDefault();
   shootAction();
 }, { passive: false });
 
-// キーボード用
+// キーボード
 document.addEventListener('keydown', (e) => {
   if (e.key === ' ') shootAction();
 });
 
-// === 左右移動ボタン（長押し対応）===
+// === 左右移動ボタン（タッチ＆マウス両対応）===
+// タッチ
 document.getElementById('btnLeft').addEventListener('touchstart', (e) => {
   e.preventDefault();
   movingLeft = true;
@@ -125,6 +126,20 @@ document.getElementById('btnRight').addEventListener('touchend', (e) => {
   movingRight = false;
 }, { passive: false });
 
+// マウス
+document.getElementById('btnLeft').addEventListener('mousedown', () => {
+  movingLeft = true;
+});
+document.getElementById('btnLeft').addEventListener('mouseup', () => {
+  movingLeft = false;
+});
+document.getElementById('btnRight').addEventListener('mousedown', () => {
+  movingRight = true;
+});
+document.getElementById('btnRight').addEventListener('mouseup', () => {
+  movingRight = false;
+});
+
 // === 弾発射 ===
 function shootBullet() {
   if (!nameRaw) return;
@@ -138,7 +153,6 @@ function spawnSushi() {
   if (!gameRunning || mode !== "shooting") return;
   const isSushi = Math.random() < 0.7;
 
-  // 巨大寿司タイプ
   let giantType = 0;
   const r = Math.random();
   if (r < 0.15) giantType = 1;   // 中サイズ（反転）
@@ -195,6 +209,7 @@ function activateRunnerMode() {
     ctx.fillText("SYSTEM RESTORED", width / 2, height / 2);
     ctx.restore();
   }, 10000);
+
   spawnRunnerObstacle();
 }
 
@@ -224,7 +239,6 @@ function gameLoop() {
   if (!gameRunning && !isGameOver) return;
   ctx.clearRect(0, 0, width, height);
 
-  // 反転バグ中
   if (bugMode) {
     ctx.save();
     ctx.translate(width / 2, height / 2);
@@ -281,8 +295,9 @@ function drawShooting() {
     ctx.fillText(sushi.emoji, sushi.x, sushi.y);
 
     bullets.forEach((bullet, j) => {
-      if (Math.abs(bullet.x - sushi.x) < (sushi.giant ? 40 : 25) &&
-          Math.abs(bullet.y - sushi.y) < (sushi.giant ? 40 : 25)) {
+      const hitRange = sushi.giant === 2 ? 40 : sushi.giant === 1 ? 35 : 25;
+      if (Math.abs(bullet.x - sushi.x) < hitRange &&
+          Math.abs(bullet.y - sushi.y) < hitRange) {
 
         if (sushi.giant === 1 && sushi.type === 'sushi') activateBugMode();
         if (sushi.giant === 2 && sushi.type === 'sushi') activateRunnerMode();
@@ -313,7 +328,6 @@ function drawShooting() {
 
 // === ランナー描画 ===
 function drawRunner() {
-  // 背景
   runnerBgOffset -= 2;
   if (runnerBgOffset < -50) runnerBgOffset = 0;
   ctx.font = "20px sans-serif";
@@ -323,7 +337,6 @@ function drawRunner() {
   }
   ctx.globalAlpha = 1;
 
-  // 棒人間物理
   runnerY += runnerVY;
   runnerVY += gravity;
   if (runnerY > height - 130) {
@@ -331,10 +344,8 @@ function drawRunner() {
     isJumping = false;
   }
 
-  // 棒人間描画
   drawStickFigure(playerX, runnerY);
 
-  // 障害物描画
   runnerObstacles.forEach((obs, i) => {
     obs.x -= 5;
     ctx.font = "32px sans-serif";
@@ -353,17 +364,17 @@ function drawStickFigure(x, y) {
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(x, y - 30, 10, 0, Math.PI * 2); // 頭
+  ctx.arc(x, y - 30, 10, 0, Math.PI * 2);
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x, y - 20);
-  ctx.lineTo(x, y); // 体
+  ctx.lineTo(x, y);
   ctx.moveTo(x, y - 20);
-  ctx.lineTo(x - 10, y - 10); // 腕
+  ctx.lineTo(x - 10, y - 10);
   ctx.moveTo(x, y - 20);
   ctx.lineTo(x + 10, y - 10);
   ctx.moveTo(x, y);
-  ctx.lineTo(x - 10, y + 15); // 足
+  ctx.lineTo(x - 10, y + 15);
   ctx.moveTo(x, y);
   ctx.lineTo(x + 10, y + 15);
   ctx.stroke();
