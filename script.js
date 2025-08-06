@@ -25,6 +25,10 @@ let movingRight = false;
 let nameRaw = "";       // 入力した名前（アルファベット用）
 let nameIndex = 0;      // 弾に使用する文字のインデックス
 
+// === バグモード ===
+let bugMode = false;
+let bugTimer = 0;
+
 // === デコ文字（プレイヤー表示用） ===
 const smallCapsMap = {
   a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ғ', g:'ɢ', h:'ʜ', i:'ɪ', j:'ᴊ',
@@ -135,11 +139,13 @@ function shootBullet() {
 function spawnSushi() {
   if (!gameRunning) return;
   const isSushi = Math.random() < 0.7;
+  const isGiant = Math.random() < 0.1; // 10%で巨大寿司
   sushiList.push({
     x: Math.random() * (width - 50),
     y: -30,
     emoji: isSushi ? sushiEmoji : chickEmoji,
-    type: isSushi ? 'sushi' : 'chick'
+    type: isSushi ? 'sushi' : 'chick',
+    giant: isGiant
   });
   setTimeout(spawnSushi, 1000);
 }
@@ -150,6 +156,35 @@ function updatePlayerPosition() {
   if (movingRight) playerX += 5;
   if (playerX < 20) playerX = 20;
   if (playerX > width - 20) playerX = width - 20;
+}
+
+// === バグモード発動 ===
+function activateBugMode() {
+  bugMode = true;
+  bugTimer = 180; // 約3秒
+}
+
+// === バグ演出描画 ===
+function renderBugEffect() {
+  if (!bugMode) return;
+
+  // 画面揺れ & 色反転フラッシュ
+  ctx.save();
+  ctx.translate((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20);
+  ctx.fillStyle = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.3)`;
+  ctx.globalCompositeOperation = 'difference';
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+
+  // スコアボードをグリッチ風表示
+  document.getElementById('scoreBoard').innerText =
+    `S⟟⟟◎RΞ: ${score} | M!SS: ${miss}`;
+
+  // タイマー管理
+  bugTimer--;
+  if (bugTimer <= 0) {
+    bugMode = false;
+  }
 }
 
 // === メインループ ===
@@ -167,7 +202,7 @@ function gameLoop() {
 
   // 弾描画（アルファベット）
   bullets.forEach((bullet, i) => {
-    bullet.y -= 10;
+    bullet.y -= bugMode ? 15 : 10; // バグ中は加速
     ctx.font = "24px sans-serif";
     ctx.fillText(bullet.char, bullet.x, bullet.y);
     if (bullet.y < 0) bullets.splice(i, 1);
@@ -175,12 +210,20 @@ function gameLoop() {
 
   // 寿司描画＆判定
   sushiList.forEach((sushi, i) => {
-    sushi.y += 3;
-    ctx.font = "24px sans-serif";
+    sushi.y += bugMode ? 5 : 3; // バグ中は加速
+    ctx.font = sushi.giant ? "48px sans-serif" : "24px sans-serif";
+    ctx.fillStyle = sushi.giant && sushi.type === 'sushi' ? "blue" : "#000";
     ctx.fillText(sushi.emoji, sushi.x, sushi.y);
 
     bullets.forEach((bullet, j) => {
-      if (Math.abs(bullet.x - sushi.x) < 25 && Math.abs(bullet.y - sushi.y) < 25) {
+      if (Math.abs(bullet.x - sushi.x) < (sushi.giant ? 40 : 25) &&
+          Math.abs(bullet.y - sushi.y) < (sushi.giant ? 40 : 25)) {
+
+        // 巨大寿司ならバグ発動
+        if (sushi.giant && sushi.type === 'sushi') {
+          activateBugMode();
+        }
+
         // 命中時にアルファベット花火
         createLetterExplosion(bullet.char, sushi.x, sushi.y, sushi.type === 'sushi' ? 'green' : 'red');
 
@@ -214,8 +257,13 @@ function gameLoop() {
     if (effect.life <= 0) effects.splice(i, 1);
   });
 
-  // スコア表示
-  document.getElementById('scoreBoard').innerText = `Score: ${score} | Miss: ${miss}`;
+  // バグ演出
+  renderBugEffect();
+
+  // スコア表示（通常時のみ）
+  if (!bugMode) {
+    document.getElementById('scoreBoard').innerText = `Score: ${score} | Miss: ${miss}`;
+  }
 
   requestAnimationFrame(gameLoop);
 }
@@ -235,7 +283,7 @@ function createLetterExplosion(char, x, y, color) {
   }
 }
 
-// === ゲーム終了・ランキング処理（既存仕様を維持） ===
+// === ゲーム終了・ランキング処理（既存仕様） ===
 function endGame() {
   gameRunning = false;
   isGameOver = true;
