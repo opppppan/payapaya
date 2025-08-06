@@ -15,6 +15,7 @@ let effects = [];
 let score = 0;
 let miss = 0;
 let gameRunning = false;
+let isGameOver = false; // ★追加：ゲームオーバーフラグ
 
 let movingLeft = false;
 let movingRight = false;
@@ -118,7 +119,7 @@ function updatePlayerPosition() {
 }
 
 function gameLoop() {
-  if (!gameRunning) return;
+  if (!gameRunning && !isGameOver) return;
   ctx.clearRect(0, 0, width, height);
 
   updatePlayerPosition();
@@ -138,8 +139,16 @@ function gameLoop() {
 
   sushiList.forEach((sushi, i) => {
     sushi.y += 3;
+
+    // ★ランキング中は背景を半透明に
+    if (isGameOver) {
+      ctx.globalAlpha = 0.3;
+    }
+
     ctx.font = "24px sans-serif";
     ctx.fillText(sushi.emoji, sushi.x, sushi.y);
+
+    ctx.globalAlpha = 1.0;
 
     bullets.forEach((bullet, j) => {
       if (Math.abs(bullet.x - sushi.x) < 25 && Math.abs(bullet.y - sushi.y) < 25) {
@@ -186,11 +195,11 @@ function gameLoop() {
 
 function endGame() {
   gameRunning = false;
+  isGameOver = true; // ★追加
   document.getElementById('finalScore').innerText = `Your Score: ${score}`;
   document.getElementById('gameOver').classList.remove('hidden');
 
   saveScore(playerText, score);
-  loadHighScores();
 }
 
 function saveScore(name, score) {
@@ -205,8 +214,6 @@ function saveScore(name, score) {
   })
   .catch(err => console.error("Fetch error:", err));
 }
-
-
 
 function loadHighScores() {
   fetch("https://script.google.com/macros/s/AKfycbzCaNiqJK9G4sLr9p9-5yfRCdnbLulolHBbSrJaPX08b2G2ldjm-73P2i-M7U4ACWP7nQ/exec")
