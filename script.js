@@ -223,6 +223,15 @@ function gameLoop() {
   ctx.textAlign = "center";
   ctx.fillText(playerText, playerX, playerY);
 
+  // ===== 三角マーカー描画（名前の上） =====
+  ctx.beginPath();
+  ctx.moveTo(playerX, playerY - 30);      // 頂点
+  ctx.lineTo(playerX - 6, playerY - 20);  // 左下
+  ctx.lineTo(playerX + 6, playerY - 20);  // 右下
+  ctx.closePath();
+  ctx.fillStyle = "#000";
+  ctx.fill();
+
   // 弾描画（アルファベット）
   bullets.forEach((bullet, i) => {
     bullet.y -= bugMode ? 15 : 10; // バグ中は加速
