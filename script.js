@@ -264,9 +264,10 @@ function loadHighScores() {
           ">
             <span style="color:${rankColor}; font-weight:bold; min-width:40px;">${index + 1}位</span>
             <span style="flex:1; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px;">
-              ${item[1]}
+              ${item[0]} <!-- 名前 -->
             </span>
-            <span style="font-weight:bold; min-width:40px;">${item[0]}</span>
+            <span style="font-weight:bold; min-width:40px;">${item[1]} <!-- スコア -->
+            </span>
           </li>`;
       });
 
